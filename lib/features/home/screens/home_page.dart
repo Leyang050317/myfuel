@@ -174,7 +174,7 @@ class _HomeDashboard extends StatelessWidget {
             // RON 97 (Secondary Color Theme)
             _buildFuelPriceCard(
               context,
-              title: 'RON 97',
+              title: 'RON 98',
               price: fuelController.fuelPrice == null
                   ? "Loading..."
                   : "RM ${fuelController.fuelPrice!.ron97.toStringAsFixed(2)}",
