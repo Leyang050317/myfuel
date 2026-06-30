@@ -3,6 +3,7 @@ import '../../fuel_price/controllers/fuel_price_controller.dart';
 import '../../petrol_station/screens/map_page.dart';
 import '../../petrol_station/screens/search_page.dart';
 import '../../../routes/app_routes.dart';
+import '../../fuel_price/widgets/fuel_trend_preview.dart';
 
 /// Main home screen container
 class HomePage extends StatefulWidget {
@@ -189,12 +190,13 @@ class _HomeDashboard extends StatelessWidget {
                 fuelController.ron97Difference,
               ),
             ),
+
             const SizedBox(height: 12),
 
             // Diesel 油价资讯卡
             _buildFuelPriceCard(
               context,
-              title: 'Diesel B10',
+              title: 'Diesel',
               price: fuelController.fuelPrice == null
                   ? "--"
                   : "RM ${fuelController.fuelPrice!.diesel.toStringAsFixed(2)}",
@@ -205,6 +207,10 @@ class _HomeDashboard extends StatelessWidget {
                 fuelController.dieselDifference,
               ),
             ),
+
+            const SizedBox(height: 28),
+
+            const FuelTrendPreview(),
           ],
         ),
       ),

@@ -33,4 +33,30 @@ class FuelPriceService {
         .map((item) => FuelPriceModel.fromJson(item))
         .toList();
   }
+
+  /// 获取历史油价资料
+  Future<List<FuelPriceModel>> getFuelHistory() async {
+
+    final url = Uri.parse(
+      "https://api.data.gov.my/data-catalogue?id=fuelprice&sort=-date&limit=24",
+    );
+
+    final response = await http.get(url);
+
+    if (response.statusCode != 200) {
+      throw Exception("Failed to load fuel history");
+    }
+
+    final List<dynamic> json = jsonDecode(response.body);
+
+    // 转换成 FuelPriceModel
+    final prices = json
+        .map((item) => FuelPriceModel.fromJson(item))
+        .toList();
+
+    // 只保留真正的油价（series_type = level）
+    return prices
+        .where((item) => item.seriesType == "level")
+        .toList();
+  }
 }
