@@ -5,7 +5,7 @@ class FuelPriceModel {
   final double ron95;
   final double ron97;
   final double diesel;
-  final String seriesType;
+  final String seriesType; // 资料类型（level、change_weekly）
 
   FuelPriceModel({
     required this.date,
@@ -15,7 +15,7 @@ class FuelPriceModel {
     required this.seriesType
   });
 
-  /// 把JSON数据转换成FuelPriceModel object
+  /// 将 Government Open Data API 回传的 JSON 数据转换成 FuelPriceModel 对象，方便 Flutter 程式读取与使用
   /// Key是String
   /// Value是任何类型，所以用dynamic
   factory FuelPriceModel.fromJson(Map<String, dynamic> json) {
