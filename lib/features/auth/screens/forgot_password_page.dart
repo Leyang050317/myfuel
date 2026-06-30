@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../core/theme/app_theme.dart';
 
-/// Screen for users to initiate a password reset.
+/// 忘记密码页面
 class ForgotPasswordPage extends StatefulWidget {
   const ForgotPasswordPage({super.key});
 
@@ -9,6 +9,8 @@ class ForgotPasswordPage extends StatefulWidget {
   State<ForgotPasswordPage> createState() => _ForgotPasswordPageState();
 }
 
+/// ForgotPasswordPage 的状态管理
+/// 负责验证电子邮件并发送重设密码连结
 class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
@@ -19,7 +21,8 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
     super.dispose();
   }
 
-  /// Validates input and triggers mock email send action
+  /// 验证电子邮件格式
+  /// 验证成功后模拟发送重设密码连结
   void _handleSendResetLink() {
     if (_formKey.currentState!.validate()) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -47,11 +50,13 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
     }
   }
 
+  /// 建立忘记密码页面画面
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
 
+    // 忘记密码页面主体
     return Scaffold(
       backgroundColor: theme.colorScheme.background,
       body: SafeArea(
@@ -63,7 +68,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
             children: [
               const SizedBox(height: 16),
               
-              // Custom Navigation Back Bar
+              // 返回登录页面按钮
               Row(
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: [
@@ -76,8 +81,8 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
               ),
               
               const SizedBox(height: 16),
-              
-              // Circular Header Graphic (Lock reset)
+
+              // 页面图示（重设密码）
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
@@ -91,8 +96,8 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                 ),
               ),
               const SizedBox(height: 24),
-              
-              // Title and Description
+
+              // 页面标题
               Text(
                 'Forgot Password',
                 style: theme.textTheme.titleLarge,
@@ -112,7 +117,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
               
               const SizedBox(height: 32),
 
-              // Email Form Input Card
+              // 重设密码表单
               Form(
                 key: _formKey,
                 child: Card(
@@ -146,7 +151,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                         ),
                         const SizedBox(height: 24),
 
-                        // Send Link Button (Height 55, Rounded 16px, Width 90%)
+                        // 发送重设密码连结按钮
                         SizedBox(
                           width: double.infinity,
                           child: ElevatedButton(
@@ -157,22 +162,6 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                         const SizedBox(height: 8),
                       ],
                     ),
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 36),
-
-              // Text button back to Login
-              TextButton.icon(
-                onPressed: () => Navigator.of(context).pop(),
-                icon: Icon(Icons.arrow_back_rounded, size: 18, color: theme.colorScheme.primary),
-                label: Text(
-                  'Back to Login',
-                  style: TextStyle(
-                    color: theme.colorScheme.primary,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 15,
                   ),
                 ),
               ),

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../routes/app_routes.dart';
 
-/// Splash screen displayed on application launch.
+/// 应用程式启动页面，负责显示品牌 Logo 并进入登录页面
 class SplashPage extends StatefulWidget {
   const SplashPage({super.key});
 
@@ -10,24 +10,29 @@ class SplashPage extends StatefulWidget {
 }
 
 class _SplashPageState extends State<SplashPage> with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _fadeAnimation;
+  late AnimationController _controller;   // 控制 Splash Screen 淡入动画
+  late Animation<double> _fadeAnimation;  // 淡入动画效果
 
+  /// 初始化动画，并在指定时间后进入登录页面。
   @override
   void initState() {
     super.initState();
+
+    // 建立动画控制器
     _controller = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1500),
     );
 
+    // 建立由透明到完全显示的淡入动画
     _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(parent: _controller, curve: Curves.easeIn),
     );
 
+    // 开始播放动画
     _controller.forward();
 
-    // Navigate to Login Page after 2.5 seconds
+    // Splash Screen 停留 2.5 秒后自动进入登录页面
     Future.delayed(const Duration(milliseconds: 2500), () {
       if (mounted) {
         Navigator.of(context).pushReplacementNamed(AppRoutes.login);
@@ -41,20 +46,22 @@ class _SplashPageState extends State<SplashPage> with SingleTickerProviderStateM
     super.dispose();
   }
 
+  /// 建立 Splash Screen 画面
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
+    // Splash Screen 页面主体
     return Scaffold(
-      backgroundColor: theme.colorScheme.primary, // Vibrant Red splash background
+      backgroundColor: theme.colorScheme.primary, // 使用主题主色作为 Splash Screen 背景
       body: SafeArea(
         child: Center(
-          child: FadeTransition(
+          child: FadeTransition(  // 套用淡入动画
             opacity: _fadeAnimation,
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // Circular White Container housing the Fuel Pump Icon
+                // 圆形 Logo 容器
                 Container(
                   padding: const EdgeInsets.all(24),
                   decoration: BoxDecoration(

@@ -3,7 +3,7 @@ import 'package:flutter/services.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../routes/app_routes.dart';
 
-/// Screen for new users to create an account.
+/// 注册页面
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
 
@@ -11,9 +11,10 @@ class RegisterPage extends StatefulWidget {
   State<RegisterPage> createState() => _RegisterPageState();
 }
 
+/// RegisterPage 的状态管理
+/// 负责输入验证、密码检查及帐号注册流程
 class _RegisterPageState extends State<RegisterPage> {
-  final _formKey = GlobalKey<FormState>();
-  
+  final _formKey = GlobalKey<FormState>();  // 表单验证 Key
   final _nameController = TextEditingController();
   final _usernameController = TextEditingController();
   final _emailController = TextEditingController();
@@ -24,6 +25,7 @@ class _RegisterPageState extends State<RegisterPage> {
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
 
+  /// 释放输入控制器资源，避免记忆体泄漏
   @override
   void dispose() {
     _nameController.dispose();
@@ -35,10 +37,10 @@ class _RegisterPageState extends State<RegisterPage> {
     super.dispose();
   }
 
-  /// Custom validation logic for password:
-  /// - At least 8 characters
-  /// - At least 4 letters (a-z, A-Z)
-  /// - At least 4 digits (0-9)
+  /// 验证密码是否符合系统规则：
+  /// - 至少 8 个字元
+  /// - 至少包含 4 个英文字母
+  /// - 至少包含 4 个数字
   bool _isValidPassword(String password) {
     if (password.length < 8) return false;
     
@@ -60,7 +62,8 @@ class _RegisterPageState extends State<RegisterPage> {
     return letters >= 4 && digits >= 4;
   }
 
-  /// Handles registration submission and validation checks
+  /// 验证注册资料
+  /// 注册成功后显示提示讯息并进入首页
   void _handleRegister() {
     if (_formKey.currentState!.validate()) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -88,11 +91,13 @@ class _RegisterPageState extends State<RegisterPage> {
     }
   }
 
+  /// 建立注册页面画面
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
 
+    // 注册页面主体
     return Scaffold(
       backgroundColor: theme.colorScheme.background,
       body: SafeArea(
@@ -103,8 +108,8 @@ class _RegisterPageState extends State<RegisterPage> {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               const SizedBox(height: 16),
-              
-              // Back Button + Header Title
+
+              // 返回登录页面按钮
               Row(
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: [
@@ -117,8 +122,8 @@ class _RegisterPageState extends State<RegisterPage> {
               ),
               
               const SizedBox(height: 8),
-              
-              // Page header titles
+
+              // 页面标题
               Text(
                 'Create Account',
                 style: theme.textTheme.titleLarge,
@@ -134,7 +139,7 @@ class _RegisterPageState extends State<RegisterPage> {
               
               const SizedBox(height: 24),
 
-              // Form card housing input fields
+              // 注册表单
               Form(
                 key: _formKey,
                 autovalidateMode: AutovalidateMode.onUserInteraction,
@@ -244,6 +249,7 @@ class _RegisterPageState extends State<RegisterPage> {
                                     : Icons.visibility_outlined,
                               ),
                               onPressed: () {
+                                // 切换密码显示与隐藏
                                 setState(() {
                                   _obscurePassword = !_obscurePassword;
                                 });
@@ -314,7 +320,7 @@ class _RegisterPageState extends State<RegisterPage> {
 
               const SizedBox(height: 24),
 
-              // Redirect back to login
+              // 返回登录页面
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [

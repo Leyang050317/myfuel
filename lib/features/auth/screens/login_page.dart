@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../routes/app_routes.dart';
 
-/// Screen allowing existing users to log in to the application.
+/// 登录页面
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
 
@@ -10,12 +10,15 @@ class LoginPage extends StatefulWidget {
   State<LoginPage> createState() => _LoginPageState();
 }
 
+/// LoginPage 的状态管理，
+/// 负责输入验证、登入流程及页面跳转。
 class _LoginPageState extends State<LoginPage> {
-  final _formKey = GlobalKey<FormState>();
-  final _usernameController = TextEditingController();
-  final _passwordController = TextEditingController();
-  bool _obscurePassword = true;
+  final _formKey = GlobalKey<FormState>();              // 表单验证 Key
+  final _usernameController = TextEditingController();  // 用户名称输入控制器
+  final _passwordController = TextEditingController();  // 密码输入控制器
+  bool _obscurePassword = true;                         // 控制密码是否隐藏显示
 
+  /// 释放输入控制器资源，避免记忆体泄漏
   @override
   void dispose() {
     _usernameController.dispose();
@@ -23,7 +26,8 @@ class _LoginPageState extends State<LoginPage> {
     super.dispose();
   }
 
-  /// Initiates the validation check and mocks login behavior
+  /// 验证用户输入资料
+  /// 验证成功后显示欢迎讯息并进入首页
   void _handleLogin() {
     if (_formKey.currentState!.validate()) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -50,10 +54,12 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
+  /// 建立登录页面画面
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
+    // 登录页面主体
     return Scaffold(
       backgroundColor: theme.colorScheme.background,
       body: SafeArea(
@@ -64,8 +70,8 @@ class _LoginPageState extends State<LoginPage> {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               const SizedBox(height: 24),
-              
-              // App Logo (Fuel Pump Icon)
+
+              // App Logo
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
@@ -85,18 +91,9 @@ class _LoginPageState extends State<LoginPage> {
                 'MyFuel',
                 style: theme.textTheme.titleLarge,
               ),
-              const SizedBox(height: 6),
-              Text(
-                'Malaysia Fuel Price & Petrol Station Navigator',
-                textAlign: TextAlign.center,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: theme.colorScheme.onBackground.withOpacity(0.6),
-                ),
-              ),
-              
-              const SizedBox(height: 32),
+              const SizedBox(height: 38),
 
-              // Login Form Card
+              // 登录表单
               Form(
                 key: _formKey,
                 child: Card(
@@ -108,7 +105,7 @@ class _LoginPageState extends State<LoginPage> {
                       children: [
                         const SizedBox(height: 8),
                         
-                        // Username Field
+                        // Username
                         TextFormField(
                           controller: _usernameController,
                           keyboardType: TextInputType.name,
@@ -125,9 +122,10 @@ class _LoginPageState extends State<LoginPage> {
                             return null;
                           },
                         ),
+
                         const SizedBox(height: 20),
                         
-                        // Password Field
+                        // Password
                         TextFormField(
                           controller: _passwordController,
                           obscureText: _obscurePassword,
@@ -157,6 +155,7 @@ class _LoginPageState extends State<LoginPage> {
                             return null;
                           },
                         ),
+
                         const SizedBox(height: 12),
                         
                         // Forgot Password Link
@@ -181,9 +180,10 @@ class _LoginPageState extends State<LoginPage> {
                             ),
                           ),
                         ),
+
                         const SizedBox(height: 16),
                         
-                        // LOGIN Button (約占卡片 100% 寬度，相當於畫面約 90% 寬度)
+                        // Login Button
                         SizedBox(
                           width: double.infinity,
                           child: ElevatedButton(
@@ -200,7 +200,7 @@ class _LoginPageState extends State<LoginPage> {
 
               const SizedBox(height: 28),
 
-              // Don't have an account? Register link
+              // Don't have an account? Register
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -224,18 +224,6 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                 ],
               ),
-
-              const SizedBox(height: 48),
-              
-              // Footer version
-              Text(
-                'Version 1.0',
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: theme.colorScheme.onBackground.withOpacity(0.4),
-                  letterSpacing: 0.8,
-                ),
-              ),
-              const SizedBox(height: 16),
             ],
           ),
         ),
