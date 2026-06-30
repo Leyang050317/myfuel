@@ -4,7 +4,7 @@ import '../../petrol_station/screens/map_page.dart';
 import '../../petrol_station/screens/search_page.dart';
 import '../../../routes/app_routes.dart';
 
-/// Main home screen container housing the bottom navigation bar and tabs.
+/// Main home screen container
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
@@ -17,9 +17,7 @@ class _HomePageState extends State<HomePage> {
 
   final FuelPriceController _fuelController = FuelPriceController();
 
-  // The list of screens to show per tab
-
-
+  /// 初始化页面，并读取最新油价资料
   @override
   void initState() {
     super.initState();
@@ -27,29 +25,26 @@ class _HomePageState extends State<HomePage> {
     _loadFuelPrice();
   }
 
+  /// 从 Controller 读取最新油价，并更新画面
   Future<void> _loadFuelPrice() async {
     await _fuelController.loadFuelPrice();
-
-    print(_fuelController.fuelPrice?.ron95);
-    print(_fuelController.fuelPrice?.ron97);
-    print(_fuelController.fuelPrice?.diesel);
-
     setState(() {});
   }
 
-  /// Changes the current page index
+  /// 切换底部导航页面
   void _navigateToTab(int index) {
     setState(() {
       _currentIndex = index;
     });
   }
 
+  /// 建立首页画面
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
     return Scaffold(
-      // Keep the appBar visible only when we are on the home dashboard page
+      // 仅在首页显示 AppBar
       appBar: _currentIndex == 0
           ? AppBar(
               title: const Text(
@@ -63,7 +58,7 @@ class _HomePageState extends State<HomePage> {
               actions: [
                 IconButton(
                   onPressed: () {
-                    // Sign out redirect
+                    // 登出并返回登入页面
                     Navigator.of(context).pushReplacementNamed(AppRoutes.login);
                   },
                   icon: const Icon(Icons.logout_rounded),
@@ -74,20 +69,19 @@ class _HomePageState extends State<HomePage> {
             )
           : null,
 
+      // 使用 IndexedStack 保留各页面状态，切换页面时不会重新建立
       body: IndexedStack(
         index: _currentIndex,
         children: [
           _HomeDashboard(
             fuelController: _fuelController,
-            onMapTap: () => _navigateToTab(1),
-            onSearchTap: () => _navigateToTab(2),
           ),
           const MapPage(),
           const SearchPage(),
         ],
       ),
 
-      // Material Design 3 Navigation Bar
+      // 底部导航栏
       bottomNavigationBar: NavigationBar(
         selectedIndex: _currentIndex,
         onDestinationSelected: _navigateToTab,
@@ -114,17 +108,12 @@ class _HomePageState extends State<HomePage> {
   }
 }
 
-/// Dedicated widget for rendering the Home Dashboard tab to prevent initState context lookups.
+/// 首页仪表板，负责显示油价资讯
 class _HomeDashboard extends StatelessWidget {
   final FuelPriceController fuelController;
 
-  final VoidCallback onMapTap;
-  final VoidCallback onSearchTap;
-
   const _HomeDashboard({
     required this.fuelController,
-    required this.onMapTap,
-    required this.onSearchTap,
   });
 
   @override
@@ -138,7 +127,7 @@ class _HomeDashboard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Welcome Section
+            // 欢迎讯息
             Text(
               'Welcome to MyFuel!',
               style: theme.textTheme.titleLarge,
@@ -150,82 +139,71 @@ class _HomeDashboard extends StatelessWidget {
             ),
             const SizedBox(height: 24),
 
-            // Fuel rates title
+            // 油价资讯标题
             Text(
               'Fuel Prices',
               style: theme.textTheme.titleMedium,
             ),
+
             const SizedBox(height: 12),
-            
-            // RON 95 (Primary Color Theme)
+
+            // 显示最新油价更新时间
+            Text(
+              fuelController.fuelPrice == null
+                  ? "Loading..."
+                  : "Last Updated: ${fuelController.fuelPrice!.date}",
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: Colors.grey.shade600,
+              ),
+            ),
+
+            const SizedBox(height: 12),
+
+            // RON95 油价资讯卡
             _buildFuelPriceCard(
               context,
               title: 'RON 95',
               price: fuelController.fuelPrice == null
-                  ? "Loading..."
+                  ? "--"
                   : "RM ${fuelController.fuelPrice!.ron95.toStringAsFixed(2)}",
               color: theme.colorScheme.primary,
-              status: fuelController.getStatus(
+              status: fuelController.fuelPrice == null
+                  ? "--"
+                  : fuelController.getStatus(
                 fuelController.ron95Difference,
               ),
             ),
             const SizedBox(height: 12),
 
-            // RON 97 (Secondary Color Theme)
+            // RON97 油价资讯卡
             _buildFuelPriceCard(
               context,
               title: 'RON 97',
               price: fuelController.fuelPrice == null
-                  ? "Loading..."
+                  ? "--"
                   : "RM ${fuelController.fuelPrice!.ron97.toStringAsFixed(2)}",
               color: theme.colorScheme.secondary,
-              status: fuelController.getStatus(
+              status: fuelController.fuelPrice == null
+                  ? "--"
+                  : fuelController.getStatus(
                 fuelController.ron97Difference,
               ),
             ),
             const SizedBox(height: 12),
 
-            // Diesel (Accent Color Theme)
+            // Diesel 油价资讯卡
             _buildFuelPriceCard(
               context,
               title: 'Diesel B10',
               price: fuelController.fuelPrice == null
-                  ? "Loading..."
+                  ? "--"
                   : "RM ${fuelController.fuelPrice!.diesel.toStringAsFixed(2)}",
               color: theme.colorScheme.tertiary,
-              status: fuelController.getStatus(
+              status: fuelController.fuelPrice == null
+                  ? "--"
+                  : fuelController.getStatus(
                 fuelController.dieselDifference,
               ),
-            ),
-            const SizedBox(height: 32),
-
-            // Quick Navigator Actions
-            Text(
-              'Quick Navigator',
-              style: theme.textTheme.titleMedium,
-            ),
-            const SizedBox(height: 12),
-            
-            Row(
-              children: [
-                Expanded(
-                  child: _buildActionCard(
-                    context,
-                    icon: Icons.map_outlined,
-                    label: 'Petrol Map',
-                    onTap: onMapTap,
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: _buildActionCard(
-                    context,
-                    icon: Icons.local_gas_station_outlined,
-                    label: 'Find Stations',
-                    onTap: onSearchTap,
-                  ),
-                ),
-              ],
             ),
           ],
         ),
@@ -233,12 +211,13 @@ class _HomeDashboard extends StatelessWidget {
     );
   }
 
+  /// 建立单张油价资讯卡片
   Widget _buildFuelPriceCard(
     BuildContext context, {
-    required String title,
-    required String price,
-    required Color color,
-    required String status,
+    required String title,  // 油品名称
+    required String price,  // 目前油价
+    required Color color,   // 卡片主题颜色
+    required String status, // 本周价格变化
   }) {
     final theme = Theme.of(context);
     final isAmber = color == theme.colorScheme.tertiary;
@@ -247,6 +226,8 @@ class _HomeDashboard extends StatelessWidget {
       elevation: 2,
       margin: EdgeInsets.zero,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+
+      // 油价卡片内容
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
         decoration: BoxDecoration(
@@ -257,6 +238,8 @@ class _HomeDashboard extends StatelessWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
+
+            // 左侧显示油品名称及本周价格变化
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -276,6 +259,8 @@ class _HomeDashboard extends StatelessWidget {
                 ),
               ],
             ),
+
+            // 右侧显示目前油价
             Text(
               price,
               style: theme.textTheme.titleLarge?.copyWith(
@@ -284,43 +269,6 @@ class _HomeDashboard extends StatelessWidget {
               ),
             ),
           ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildActionCard(
-    BuildContext context, {
-    required IconData icon,
-    required String label,
-    required VoidCallback onTap,
-  }) {
-    final theme = Theme.of(context);
-    return Card(
-      elevation: 2,
-      margin: EdgeInsets.zero,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(20),
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                icon,
-                size: 36,
-                color: theme.colorScheme.primary,
-              ),
-              const SizedBox(height: 12),
-              Text(
-                label,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
-          ),
         ),
       ),
     );
