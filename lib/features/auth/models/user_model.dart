@@ -1,5 +1,5 @@
 /// Data model representing an authenticated user.
-
+import 'package:cloud_firestore/cloud_firestore.dart';
 /// Represents a registered user in the MyFuel application.
 ///
 /// This model stores all information related to a user's account.
@@ -43,7 +43,7 @@ class UserModel {
 
   /// Creates a new UserModel.
   const UserModel({
-    required this.id,
+    this.id = '',
     required this.fullName,
     required this.username,
     required this.email,
@@ -54,4 +54,23 @@ class UserModel {
     required this.createdAt,
     required this.updatedAt,
   });
+
+  factory UserModel.fromFirestore(
+      DocumentSnapshot<Map<String, dynamic>> doc,
+      ) {
+    final data = doc.data()!;
+
+    return UserModel(
+      id: data['uid'] ?? '',
+      fullName: data['fullName'] ?? '',
+      username: data['username'] ?? '',
+      email: data['email'] ?? '',
+      phoneNumber: data['phoneNumber'] ?? '',
+      icNumber: data['icNumber'] ?? '',
+      password: '',
+      emailVerified: false,
+      createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      updatedAt: (data['updatedAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
+    );
+  }
 }

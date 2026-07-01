@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../core/theme/app_theme.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import '../repositories/firebase_auth_repository.dart';
 
 /// 忘记密码页面
 class ForgotPasswordPage extends StatefulWidget {
@@ -14,6 +16,7 @@ class ForgotPasswordPage extends StatefulWidget {
 class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
+  final _authRepository = FirebaseAuthRepository();
 
   @override
   void dispose() {
@@ -23,30 +26,46 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
 
   /// 验证电子邮件格式
   /// 验证成功后模拟发送重设密码连结
-  void _handleSendResetLink() {
-    if (_formKey.currentState!.validate()) {
+  Future<void> _handleSendResetLink() async {
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
+    try {
+      await _authRepository.requestPasswordReset(
+        _emailController.text.trim(),
+      );
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Row(
-            children: [
-              const Icon(Icons.check_circle_outline_rounded, color: Colors.white),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  'Reset link successfully sent to ${_emailController.text}!',
-                  style: const TextStyle(fontWeight: FontWeight.w500),
-                ),
-              ),
-            ],
+          content: const Text(
+            'Password reset email sent. Please check your inbox.',
           ),
           backgroundColor: AppTheme.secondaryColor,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          margin: const EdgeInsets.all(16),
         ),
       );
-      // Go back to the login screen
       Navigator.of(context).pop();
+    } on FirebaseAuthException catch (e) {
+      if (!mounted) return;
+      String message = 'Unable to send reset email.';
+      switch (e.code) {
+        case 'invalid-email':
+          message = 'Please enter a valid email address.';
+          break;
+        case 'user-not-found':
+          message = 'No account found with this email.';
+          break;
+        case 'too-many-requests':
+          message = 'Too many requests. Please try again later.';
+          break;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message)),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.toString())),
+      );
     }
   }
 

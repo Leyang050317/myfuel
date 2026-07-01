@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../../../core/theme/app_theme.dart';
-import '../../../routes/app_routes.dart';
+import '../models/user_model.dart';
+import '../repositories/firebase_auth_repository.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 /// 注册页面
 class RegisterPage extends StatefulWidget {
@@ -21,9 +22,12 @@ class _RegisterPageState extends State<RegisterPage> {
   final _phoneController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
+  final _authRepository = FirebaseAuthRepository();
+  final _icController = TextEditingController();
 
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
+  bool _isLoading = false;
 
   /// 释放输入控制器资源，避免记忆体泄漏
   @override
@@ -64,30 +68,86 @@ class _RegisterPageState extends State<RegisterPage> {
 
   /// 验证注册资料
   /// 注册成功后显示提示讯息并进入首页
-  void _handleRegister() {
-    if (_formKey.currentState!.validate()) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Row(
-            children: [
-              const Icon(Icons.check_circle_outline_rounded, color: Colors.white),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  'Account created successfully for ${_usernameController.text}!',
-                  style: const TextStyle(fontWeight: FontWeight.w500),
-                ),
-              ),
-            ],
+  Future<void> _handleRegister() async {
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
+    setState(() {
+      _isLoading = true;
+    });
+
+    final user = UserModel(
+      fullName: _nameController.text.trim(),
+      username: _usernameController.text.trim(),
+      email: _emailController.text.trim(),
+      phoneNumber: _phoneController.text.trim(),
+      icNumber: _icController.text.trim(),
+      password: _passwordController.text,
+      createdAt: DateTime.now(),
+      updatedAt: DateTime.now(),
+    );
+
+    try {
+      await _authRepository.register(user);
+
+      if (!mounted) return;
+
+      await showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => AlertDialog(
+          title: const Text('Registration Successful'),
+          content: const Text(
+            'Your account has been created successfully.\n\n'
+                'A verification email has been sent to your email address.\n'
+                'Please verify your email before logging in.',
           ),
-          backgroundColor: AppTheme.secondaryColor,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          margin: const EdgeInsets.all(16),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context); // Close dialog
+                Navigator.pop(context); // Back to Login
+              },
+              child: const Text('OK'),
+            ),
+          ],
         ),
       );
-      // Navigate to Home screen
-      Navigator.of(context).pushReplacementNamed(AppRoutes.home);
+    } on FirebaseAuthException catch (e) {
+      if (!mounted) return;
+
+      String message = 'Registration failed.';
+
+      switch (e.code) {
+        case 'email-already-in-use':
+          message = 'This email is already registered.';
+          break;
+
+        case 'weak-password':
+          message = 'Password is too weak.';
+          break;
+
+        case 'invalid-email':
+          message = 'Invalid email address.';
+          break;
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message)),
+      );
+    } catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.toString())),
+      );
+    }
+    finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 
@@ -307,8 +367,17 @@ class _RegisterPageState extends State<RegisterPage> {
                         SizedBox(
                           width: double.infinity,
                           child: ElevatedButton(
-                            onPressed: _handleRegister,
-                            child: const Text('CREATE ACCOUNT'),
+                            onPressed: _isLoading ? null : _handleRegister,
+                            child: _isLoading
+                                ? const SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                                : const Text('CREATE ACCOUNT'),
                           ),
                         ),
                         const SizedBox(height: 8),

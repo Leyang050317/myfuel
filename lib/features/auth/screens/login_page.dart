@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
-import '../../../core/theme/app_theme.dart';
 import '../../../routes/app_routes.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import '../repositories/firebase_auth_repository.dart';
+import '../models/user_model.dart';
 
 /// 登录页面
 class LoginPage extends StatefulWidget {
@@ -14,46 +16,77 @@ class LoginPage extends StatefulWidget {
 /// 负责输入验证、登入流程及页面跳转。
 class _LoginPageState extends State<LoginPage> {
   final _formKey = GlobalKey<FormState>();              // 表单验证 Key
-  final _usernameController = TextEditingController();  // 用户名称输入控制器
+  final _emailController = TextEditingController();  // 用户名称输入控制器
   final _passwordController = TextEditingController();  // 密码输入控制器
+  final _authRepository = FirebaseAuthRepository();
   bool _obscurePassword = true;                         // 控制密码是否隐藏显示
+  bool _isLoading = false;
 
   /// 释放输入控制器资源，避免记忆体泄漏
   @override
   void dispose() {
-    _usernameController.dispose();
+    _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
 
   /// 验证用户输入资料
   /// 验证成功后显示欢迎讯息并进入首页
-  void _handleLogin() {
-    if (_formKey.currentState!.validate()) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Row(
-            children: [
-              const Icon(Icons.check_circle_outline_rounded, color: Colors.white),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  'Welcome to MyFuel, ${_usernameController.text}!',
-                  style: const TextStyle(fontWeight: FontWeight.w500),
-                ),
-              ),
-            ],
-          ),
-          backgroundColor: AppTheme.secondaryColor,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          margin: const EdgeInsets.all(16),
-        ),
+  Future<void> _handleLogin() async {
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
+    setState(() {
+      _isLoading = true;
+    });
+    try {
+      final UserModel? user = await _authRepository.login(
+        usernameOrEmail: _emailController.text.trim(),
+        password: _passwordController.text,
       );
+      if (!mounted) return;
+      if (user == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('User profile not found.'),
+          ),
+        );
+        return;
+      }
       Navigator.of(context).pushReplacementNamed(AppRoutes.home);
+    } on FirebaseAuthException catch (e) {
+      if (!mounted) return;
+      String message = 'Login failed.';
+      switch (e.code) {
+        case 'invalid-credential':
+        case 'wrong-password':
+        case 'user-not-found':
+          message = 'Incorrect email or password.';
+          break;
+        case 'email-not-verified':
+          message = 'Please verify your email before logging in.';
+          break;
+        case 'too-many-requests':
+          message = 'Too many login attempts. Please try again later.';
+          break;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message)),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.toString())),
+      );
+    }
+    finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
-
   /// 建立登录页面画面
   @override
   Widget build(BuildContext context) {
@@ -107,17 +140,17 @@ class _LoginPageState extends State<LoginPage> {
                         
                         // Username
                         TextFormField(
-                          controller: _usernameController,
+                          controller: _emailController,
                           keyboardType: TextInputType.name,
                           textInputAction: TextInputAction.next,
                           decoration: const InputDecoration(
-                            labelText: 'Username',
-                            hintText: 'Enter your username',
+                            labelText: 'Email',
+                            hintText: 'Enter your email',
                             prefixIcon: Icon(Icons.person_outline_rounded),
                           ),
                           validator: (value) {
                             if (value == null || value.trim().isEmpty) {
-                              return 'Username is required';
+                              return 'Email is required';
                             }
                             return null;
                           },
@@ -186,9 +219,18 @@ class _LoginPageState extends State<LoginPage> {
                         // Login Button
                         SizedBox(
                           width: double.infinity,
-                          child: ElevatedButton(
-                            onPressed: _handleLogin,
-                            child: const Text('LOGIN'),
+                          child:ElevatedButton(
+                            onPressed: _isLoading ? null : _handleLogin,
+                            child: _isLoading
+                                ? const SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
+                                : const Text('LOGIN'),
                           ),
                         ),
                         const SizedBox(height: 8),

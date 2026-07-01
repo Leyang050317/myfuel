@@ -35,4 +35,9 @@ abstract class AuthRepository {
 
   /// Retrieves a user by their ID.
   Future<UserModel?> getUserById(String id);
+  /// Sends an email verification to the currently signed-in user.
+  Future<void> sendEmailVerification();
+  /// Reloads the current user and checks whether their email is verified.
+  Future<bool> isEmailVerified();
+
 }
