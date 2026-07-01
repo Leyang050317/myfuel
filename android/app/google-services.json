@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "44982007348",
+    "project_id": "myfuel-auth",
+    "storage_bucket": "myfuel-auth.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:44982007348:android:b04ea9ff5f92b4689f3c61",
+        "android_client_info": {
+          "package_name": "com.example.myfuel"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAjK9-A0cDVlSDC6n3ftFKYNOqwX95AUlQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
