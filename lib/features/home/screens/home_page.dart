@@ -49,7 +49,7 @@ class _HomePageState extends State<HomePage> {
       appBar: _currentIndex == 0
           ? AppBar(
               title: const Text(
-                'MyFuel Dashboard',
+                'MyFuel',
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
               ),
               backgroundColor: Colors.white,

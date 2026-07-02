@@ -49,16 +49,65 @@ class FuelTrendChart extends StatelessWidget {
       height: 250,
       child: LineChart(
         LineChartData(
-          gridData: const FlGridData(show: true),
-          borderData: FlBorderData(show: true),
+          lineTouchData: LineTouchData(
+            handleBuiltInTouches: true,
+
+            touchTooltipData: LineTouchTooltipData(
+              tooltipBorderRadius: BorderRadius.circular(10),
+
+              getTooltipColor: (touchedSpot) => Colors.black87,
+
+              getTooltipItems: (touchedSpots) {
+                return touchedSpots.map((spot) {
+                  final historyItem = reversedHistory[spot.x.toInt()];
+                  final parts = historyItem.date.split("-");
+
+                  return LineTooltipItem(
+                    "${parts[2]}/${parts[1]}\nRM ${spot.y.toStringAsFixed(2)}",
+                    const TextStyle(
+                      color: Colors.white,
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  );
+                }).toList();
+              },
+            ),
+          ),
+
+          gridData: FlGridData(
+            show: true,
+            drawVerticalLine: false,
+            horizontalInterval: 0.05,
+            getDrawingHorizontalLine: (value) {
+              return FlLine(
+                color: Colors.grey.shade300,
+                strokeWidth: 1,
+              );
+            },
+          ),
+
+          borderData: FlBorderData(
+            show: true,
+            border: Border(
+              left: BorderSide(color: Colors.grey.shade400),
+              bottom: BorderSide(color: Colors.grey.shade400),
+            ),
+          ),
 
           titlesData: FlTitlesData(
             topTitles: const AxisTitles(
               sideTitles: SideTitles(showTitles: false),
             ),
+
             rightTitles: const AxisTitles(
               sideTitles: SideTitles(showTitles: false),
             ),
+
+            leftTitles: const AxisTitles(
+              sideTitles: SideTitles(showTitles: false,),
+            ),
+
             bottomTitles: AxisTitles(
               sideTitles: SideTitles(
                 showTitles: true,
@@ -89,10 +138,18 @@ class FuelTrendChart extends StatelessWidget {
 
           lineBarsData: [
             LineChartBarData(
-              isCurved: true,
-              dotData: const FlDotData(show: true),
-
               spots: spots,
+              isCurved: true,
+              barWidth: 3,
+              color: Theme.of(context).colorScheme.primary,
+
+              belowBarData: BarAreaData(
+                show: true,
+                color: Theme.of(context)
+                    .colorScheme
+                    .primary
+                    .withOpacity(0.15),
+              ),
             ),
           ],
         ),
