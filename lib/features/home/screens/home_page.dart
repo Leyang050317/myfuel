@@ -4,6 +4,7 @@ import '../../petrol_station/screens/map_page.dart';
 import '../../petrol_station/screens/search_page.dart';
 import '../../../routes/app_routes.dart';
 import '../../fuel_price/widgets/fuel_trend_preview.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// Main home screen container
 class HomePage extends StatefulWidget {
@@ -58,8 +59,10 @@ class _HomePageState extends State<HomePage> {
               centerTitle: false,
               actions: [
                 IconButton(
-                  onPressed: () {
+                  onPressed: () async{
                     // 登出并返回登入页面
+                    await Supabase.instance.client.auth.signOut();
+                    if(!context.mounted)return;
                     Navigator.of(context).pushReplacementNamed(AppRoutes.login);
                   },
                   icon: const Icon(Icons.logout_rounded),

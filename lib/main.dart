@@ -1,5 +1,4 @@
-import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_auth/firebase_auth.dart'; //testing firebase initializations
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter/material.dart';
 import 'app.dart';
 
@@ -7,9 +6,10 @@ import 'app.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  await Firebase.initializeApp();
-  print("Firebase initialized successfully!");
-  print(FirebaseAuth.instance);
+  await Supabase.initialize(
+    url: 'https://rbctfvooqrzdoyzdllua.supabase.co',
+    publishableKey: 'sb_publishable_wjZMNBzzC3JU7_ifnyjNFQ_nprN6Gqn',
+  );
 
   runApp(const App());
 }

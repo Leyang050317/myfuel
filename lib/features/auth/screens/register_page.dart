@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../models/user_model.dart';
-import '../repositories/firebase_auth_repository.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import '../repositories/supabase_auth_repository.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// 注册页面
 class RegisterPage extends StatefulWidget {
@@ -22,7 +22,7 @@ class _RegisterPageState extends State<RegisterPage> {
   final _phoneController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
-  final _authRepository = FirebaseAuthRepository();
+  final _authRepository = SupabaseAuthRepository();
   final _icController = TextEditingController();
 
   bool _obscurePassword = true;
@@ -113,7 +113,7 @@ class _RegisterPageState extends State<RegisterPage> {
           ],
         ),
       );
-    } on FirebaseAuthException catch (e) {
+    }on AuthException catch (e) {
       if (!mounted) return;
 
       String message = 'Registration failed.';
@@ -135,11 +135,18 @@ class _RegisterPageState extends State<RegisterPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(message)),
       );
-    } catch (e) {
+    } catch (e, stackTrace) {
+      debugPrint('====================================');
+      debugPrint('REGISTER ERROR');
+      debugPrint(e.toString());
+      debugPrintStack(stackTrace: stackTrace);
+      debugPrint('====================================');
       if (!mounted) return;
-
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.toString())),
+        SnackBar(
+            content: Text(e.toString()),
+            backgroundColor: Colors.red,
+        ),
       );
     }
     finally {

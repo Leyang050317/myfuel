@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../core/theme/app_theme.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import '../repositories/firebase_auth_repository.dart';
+import '../repositories/supabase_auth_repository.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// 忘记密码页面
 class ForgotPasswordPage extends StatefulWidget {
@@ -16,7 +16,7 @@ class ForgotPasswordPage extends StatefulWidget {
 class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
-  final _authRepository = FirebaseAuthRepository();
+  final _authRepository = SupabaseAuthRepository();
 
   @override
   void dispose() {
@@ -44,7 +44,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
         ),
       );
       Navigator.of(context).pop();
-    } on FirebaseAuthException catch (e) {
+    } on AuthException catch (e) {
       if (!mounted) return;
       String message = 'Unable to send reset email.';
       switch (e.code) {

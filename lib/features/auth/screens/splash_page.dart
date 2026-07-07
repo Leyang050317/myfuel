@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../routes/app_routes.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// 应用程式启动页面，负责显示品牌 Logo 并进入登录页面
 class SplashPage extends StatefulWidget {
@@ -34,7 +35,13 @@ class _SplashPageState extends State<SplashPage> with SingleTickerProviderStateM
 
     // Splash Screen 停留 2.5 秒后自动进入登录页面
     Future.delayed(const Duration(milliseconds: 2500), () {
-      if (mounted) {
+      if (!mounted) return;
+
+      final session = Supabase.instance.client.auth.currentSession;
+
+      if (session != null) {
+        Navigator.of(context).pushReplacementNamed(AppRoutes.home);
+      } else {
         Navigator.of(context).pushReplacementNamed(AppRoutes.login);
       }
     });

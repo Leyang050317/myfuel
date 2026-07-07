@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../../routes/app_routes.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import '../repositories/firebase_auth_repository.dart';
+import '../repositories/supabase_auth_repository.dart';
 import '../models/user_model.dart';
-
+import 'package:supabase_flutter/supabase_flutter.dart';
 /// 登录页面
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -18,7 +17,7 @@ class _LoginPageState extends State<LoginPage> {
   final _formKey = GlobalKey<FormState>();              // 表单验证 Key
   final _emailController = TextEditingController();  // 用户名称输入控制器
   final _passwordController = TextEditingController();  // 密码输入控制器
-  final _authRepository = FirebaseAuthRepository();
+  final _authRepository = SupabaseAuthRepository();
   bool _obscurePassword = true;                         // 控制密码是否隐藏显示
   bool _isLoading = false;
 
@@ -54,7 +53,7 @@ class _LoginPageState extends State<LoginPage> {
         return;
       }
       Navigator.of(context).pushReplacementNamed(AppRoutes.home);
-    } on FirebaseAuthException catch (e) {
+    } on AuthException catch (e) {
       if (!mounted) return;
       String message = 'Login failed.';
       switch (e.code) {
