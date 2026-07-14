@@ -5,6 +5,7 @@ import '../features/auth/screens/register_page.dart';
 import '../features/auth/screens/forgot_password_page.dart';
 import '../features/home/screens/home_page.dart';
 import '../features/fuel_price/screens/fuel_trend_page.dart';
+import '../features/map/screens/osm_test_page.dart';
 
 /// Application route name constants and route map definitions.
 class AppRoutes {
@@ -14,6 +15,7 @@ class AppRoutes {
   static const String forgotPassword = '/forgot-password';
   static const String home = '/home';
   static const String fuelTrend = '/fuel-trend';
+  static const String osmTest = '/osm-test';
 
   static Map<String, WidgetBuilder> get routes => {
         splash: (context) => const SplashPage(),
@@ -22,5 +24,7 @@ class AppRoutes {
         forgotPassword: (context) => const ForgotPasswordPage(),
         home: (context) => const HomePage(),
         fuelTrend: (context) => const FuelTrendPage(),
+
+        osmTest: (context) => const OSMTestPage(),
       };
 }
