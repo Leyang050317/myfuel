@@ -5,7 +5,8 @@ import '../../petrol_station/screens/search_page.dart';
 import '../../../routes/app_routes.dart';
 import '../../fuel_price/widgets/fuel_trend_preview.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-
+import '../../map/screens/osm_test_page.dart';
+import '../../fuel_tracking/pages/fuel_tracking_page.dart';
 /// Main home screen container
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -50,7 +51,7 @@ class _HomePageState extends State<HomePage> {
       appBar: _currentIndex == 0
           ? AppBar(
               title: const Text(
-                'MyFuel',
+                'MyFuel Test',
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
               ),
               backgroundColor: Colors.white,
@@ -58,6 +59,19 @@ class _HomePageState extends State<HomePage> {
               elevation: 0,
               centerTitle: false,
               actions: [
+                IconButton(
+                  icon: const Icon(Icons.bug_report),
+                  tooltip: 'Developer Test',
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const OSMTestPage(),
+                      ),
+                    );
+                  },
+                ),
+
                 IconButton(
                   onPressed: () async{
                     // 登出并返回登入页面
@@ -214,6 +228,35 @@ class _HomeDashboard extends StatelessWidget {
             const SizedBox(height: 28),
 
             const FuelTrendPreview(),
+            const SizedBox(height: 24),
+
+            Card(
+              elevation: 2,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: ListTile(
+                leading: const CircleAvatar(
+                  child: Icon(Icons.route),
+                ),
+                title: const Text(
+                  "Fuel Tracking",
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                subtitle: const Text(
+                  "Track your journey and estimate fuel consumption.",
+                ),
+                trailing: const Icon(Icons.arrow_forward_ios),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const FuelTrackingPage(),
+                    ),
+                  );
+                },
+              ),
+            ),
           ],
         ),
       ),
