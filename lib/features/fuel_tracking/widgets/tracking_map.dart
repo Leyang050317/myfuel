@@ -5,11 +5,10 @@ import '../models/route_model.dart';
 
 class TrackingMap extends StatelessWidget {
   final MapController mapController;
-
   final LatLng currentLocation;
-
   final LatLng? destination;
   final RouteModel? route;
+  final VoidCallback? onMapMoved;
 
   const TrackingMap({
     super.key,
@@ -17,6 +16,7 @@ class TrackingMap extends StatelessWidget {
     required this.currentLocation,
     this.destination,
     this.route,
+    this.onMapMoved,
   });
 
   @override
@@ -27,6 +27,11 @@ class TrackingMap extends StatelessWidget {
       options: MapOptions(
         initialCenter: currentLocation,
         initialZoom: 15,
+        onPositionChanged: (position, hasGesture) {
+          if (hasGesture) {
+            onMapMoved?.call();
+          }
+        },
       ),
 
       children: [

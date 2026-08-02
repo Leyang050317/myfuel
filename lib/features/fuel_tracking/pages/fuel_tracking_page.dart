@@ -13,7 +13,6 @@ import '../widgets/tracking_map.dart';
 import '../widgets/trip_bottom_sheet.dart';
 import '../widgets/trip_summary_card.dart';
 import '../widgets/trip_information_card.dart';
-import '../widgets/tracking_controls.dart';
 
 class FuelTrackingPage extends StatefulWidget {
   const FuelTrackingPage({super.key});
@@ -23,8 +22,7 @@ class FuelTrackingPage extends StatefulWidget {
       _FuelTrackingPageState();
 }
 
-class _FuelTrackingPageState
-    extends State<FuelTrackingPage> {
+class _FuelTrackingPageState extends State<FuelTrackingPage> {
 
   final MapController _mapController = MapController();
 
@@ -44,9 +42,11 @@ class _FuelTrackingPageState
   StreamSubscription<Position>?
   _positionStream;
   Position? _currentPosition;
-  DestinationModel?
-  _selectedDestination;
+  final Distance _distance = const Distance();
+  DestinationModel?_selectedDestination;
   RouteModel? _plannedRoute;
+  List<DestinationModel> _searchResults = [];
+  Timer? _searchDebounce;
 
   @override
   void initState() {
@@ -61,6 +61,7 @@ class _FuelTrackingPageState
   @override
   void dispose() {
     _positionStream?.cancel();
+    _searchDebounce?.cancel();
     _searchController.dispose();
     super.dispose();
   }
@@ -72,21 +73,45 @@ class _FuelTrackingPageState
     if (!granted) return;
 
     final current =
-    await _locationService
-        .getCurrentLocation();
+    await _locationService.getCurrentLocation();
 
     setState(() {
       _currentPosition = current;
     });
+    _mapController.move(
+      LatLng(
+        current.latitude,
+        current.longitude,
+      ),
+      16,
+    );
+    _hasCenteredOnUser = true;
 
     _positionStream =
         _locationService
-            .getPositionStream()
-            .listen((position) {
-
+            .getPositionStream().listen((position) {
           setState(() {
             _currentPosition = position;
           });
+          if (_followUser) {
+            _mapController.move(
+              LatLng(
+                position.latitude,
+                position.longitude,
+              ),
+              _mapController.camera.zoom,
+            );
+          }
+          if (!_hasCenteredOnUser) {
+            _mapController.move(
+              LatLng(
+                position.latitude,
+                position.longitude,
+              ),
+              16,
+            );
+            _hasCenteredOnUser = true;
+          }
 
           if (_tripService.isTracking) {
             _mapController.move(
@@ -126,14 +151,17 @@ class _FuelTrackingPageState
 
   @override
   Widget build(BuildContext context) {
+    if (_currentPosition == null) {
+      return const Scaffold(
+        body: Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
 
-    final distance =
-        _tripService.currentTrip?.totalDistanceKm ?? 0;
-
+    final distance = _tripService.currentTrip?.totalDistanceKm ?? 0;
     final fuelUsed = FuelCalculator.calculateFuelUsed(distance);
-
     const fuelPrice = 3.37;
-
     final fuelCost = FuelCalculator.calculateFuelCost(
       fuelUsed,
       fuelPrice,
@@ -152,11 +180,16 @@ class _FuelTrackingPageState
             child: TrackingMap(
               mapController: _mapController,
               currentLocation: LatLng(
-                _currentPosition?.latitude ?? 3.1390,
-                _currentPosition?.longitude ?? 101.6869,
+                _currentPosition!.latitude,
+                _currentPosition!.longitude,
               ),
               destination: _selectedDestination?.location,
               route: _plannedRoute,
+              onMapMoved: () {
+                setState(() {
+                  _followUser = false;
+                });
+              },
             ),
           ),
 
@@ -179,9 +212,11 @@ class _FuelTrackingPageState
                           icon: const Icon(Icons.clear),
                           onPressed: () {
                             _searchController.clear();
-
+                            FocusScope.of(context).unfocus();
                             setState(() {
                               _selectedDestination = null;
+                              _plannedRoute = null;
+                              _searchResults.clear();
                             });
                           },
                         ),
@@ -192,46 +227,170 @@ class _FuelTrackingPageState
                         ),
                       ),
 
-                      onSubmitted: (value) async {
-                        final results =
-                        await _routeService.searchDestination(value);
-                        if (results.isEmpty) return;
-                        final destination = results.first;
-                        if (_currentPosition == null) return;
-                        final route = await _routeService.getRoute(
-                          start: LatLng(
-                            _currentPosition!.latitude,
-                            _currentPosition!.longitude,
-                          ),
-                          destination: destination.location,
+                      onChanged: (value) {
+                        _searchDebounce?.cancel();
+                        _searchDebounce = Timer(
+                          const Duration(milliseconds: 300),
+                              () async {
+                            if (value.trim().isEmpty) {
+                              setState(() {
+                                _searchResults.clear();
+                              });
+                              return;
+                            }
+                            final results = await _routeService.searchDestination(value);
+                            results.sort((a, b) {
+                              final distanceA = _distance(
+                                LatLng(
+                                  _currentPosition!.latitude,
+                                  _currentPosition!.longitude,
+                                ),
+                                a.location,
+                              );
+
+                              final distanceB = _distance(
+                                LatLng(
+                                  _currentPosition!.latitude,
+                                  _currentPosition!.longitude,
+                                ),
+                                b.location,
+                              );
+                              return distanceA.compareTo(distanceB);
+                            });
+                            setState(() {
+                              _searchResults = results;
+                            });
+                          },
                         );
 
-                        setState(() {
-                          _selectedDestination = destination;
-                          _plannedRoute = route;
-                          _arrivalHandled = false;
-                        });
-
-                        _tripService.setPlannedRoute(
-                          distanceKm: route.distanceKm,
-                          duration: route.duration,
-                        );
-
-                        final bounds = LatLngBounds.fromPoints(route.polyline);
-                        _mapController.fitCamera(
-                          CameraFit.bounds(
-                            bounds: bounds,
-                            padding: const EdgeInsets.all(60),
-                          ),
-                        );
                       },
                     ),
                   ),
                 ),
+
               ),
             ),
           ),
+          if (_searchResults.isNotEmpty)
+            Positioned(
+              top: 88,
+              left: 16,
+              right: 16,
+              child: Material(
+                elevation: 8,
+                borderRadius: BorderRadius.circular(14),
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(
+                    maxHeight: 250,
+                  ),
+                  child: ListView.separated(
+                    shrinkWrap: true,
+                    itemCount: _searchResults.length,
+                    separatorBuilder: (_, __) =>
+                    const Divider(height: 1),
+                    itemBuilder: (context, index) {
 
+                      final destination =
+                      _searchResults[index];
+
+                      return ListTile(
+                        leading: const Icon(
+                          Icons.location_on,
+                          color: Colors.red,
+                        ),
+                        title: Row(
+                          children: [
+                            Expanded(
+                              child: Text(destination.name),
+                            ),
+                            Text(
+                              "${(_distance(
+                                LatLng(
+                                  _currentPosition!.latitude,
+                                  _currentPosition!.longitude,
+                                ),
+                                destination.location,
+                              ) / 1000).toStringAsFixed(1)} km",
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey,
+                              ),
+                            ),
+                          ],
+                        ),
+
+                        subtitle: Text(
+                          destination.address,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+
+                        onTap: () async {
+                          FocusScope.of(context).unfocus();
+                          // Fill search bar
+                          _searchController.text = destination.name;
+                          // Hide suggestion list
+                          setState(() {
+                            _searchResults.clear();
+                            _selectedDestination = destination;
+                          });
+
+                          // Calculate route
+                          final route = await _routeService.getRoute(
+                            start: LatLng(
+                              _currentPosition!.latitude,
+                              _currentPosition!.longitude,
+                            ),
+                            destination: destination.location,
+                          );
+
+                          if (route == null) return;
+
+                          setState(() {
+                            _plannedRoute = route;
+                          });
+
+                          // Zoom map to fit route
+                          _mapController.fitCamera(
+                            CameraFit.bounds(
+                              bounds: LatLngBounds.fromPoints(route.polyline),
+                              padding: const EdgeInsets.all(60),
+                            ),
+                          );
+                        },
+                      );
+                    },
+                  ),
+                ),
+              ),
+            ),
+          Positioned(
+            left: 16,
+            bottom: 230,
+            child: FloatingActionButton(
+              heroTag: "followButton",
+              mini: true,
+              backgroundColor:
+              _followUser ? Colors.blue : Colors.grey,
+              child: const Icon(
+                Icons.my_location,
+                color: Colors.white,
+              ),
+              onPressed: () {
+                if (_currentPosition == null) return;
+                setState(() {
+                  _followUser = true;
+                });
+                _mapController.move(
+                  LatLng(
+                    _currentPosition!.latitude,
+                    _currentPosition!.longitude,
+                  ),
+                  _mapController.camera.zoom,
+                );
+              },
+            ),
+          ),
           Align(
             alignment: Alignment.bottomCenter,
             child: TripBottomSheet(
@@ -256,7 +415,12 @@ class _FuelTrackingPageState
 
                       onStop: () {
                         _tripService.stopTrip();
-                        setState(() {});
+                        _searchController.clear();
+                        setState(() {
+                          _plannedRoute = null;
+                          _selectedDestination = null;
+                          _searchResults.clear();
+                        });
                       },
                     ),
 
@@ -293,8 +457,9 @@ class _FuelTrackingPageState
       ),
     );
   }
+  bool _hasCenteredOnUser = false;
   bool _arrivalHandled = false;
-
+  bool _followUser = true;
   Future<void> _onArrival() async {
     if (_arrivalHandled) return;
     _arrivalHandled = true;
@@ -362,5 +527,4 @@ class _FuelTrackingPageState
       ),
     );
   }
-
 }

@@ -15,9 +15,13 @@ class RouteService {
     }
 
     final uri = Uri.parse(
-      '$_baseUrl?q=$query&format=jsonv2&limit=5',
+      '$_baseUrl'
+          '?q=${Uri.encodeQueryComponent(query)}'
+          '&format=jsonv2'
+          '&limit=10'
+          '&countrycodes=my'
+          '&addressdetails=1',
     );
-
     final response = await http.get(
       uri,
       headers: {
@@ -32,20 +36,16 @@ class RouteService {
     final List data = jsonDecode(response.body);
 
     return data.map((item) {
-
+      final displayName = item['display_name'] as String;
+      final parts = displayName.split(',');
       return DestinationModel(
-
-        name: item['display_name'],
-
-        address: item['display_name'],
-
+        name: parts.first.trim(),
+        address: parts.skip(1).join(',').trim(),
         location: LatLng(
           double.parse(item['lat']),
           double.parse(item['lon']),
         ),
-
       );
-
     }).toList();
   }
 
@@ -53,7 +53,6 @@ class RouteService {
     required LatLng start,
     required LatLng destination,
   }) async {
-
     final uri = Uri.parse(
       'https://router.project-osrm.org/route/v1/driving/'
           '${start.longitude},${start.latitude};'
