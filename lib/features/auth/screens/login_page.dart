@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
-import '../../../routes/app_routes.dart';
-import '../repositories/supabase_auth_repository.dart';
-import '../models/user_model.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+
+import '../../../routes/app_routes.dart';
+import '../constants/admin_credentials.dart';
+import '../models/user_model.dart';
+import '../repositories/supabase_auth_repository.dart';
+
 /// 登录页面
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -14,11 +17,11 @@ class LoginPage extends StatefulWidget {
 /// LoginPage 的状态管理，
 /// 负责输入验证、登入流程及页面跳转。
 class _LoginPageState extends State<LoginPage> {
-  final _formKey = GlobalKey<FormState>();              // 表单验证 Key
-  final _emailController = TextEditingController();  // 用户名称输入控制器
-  final _passwordController = TextEditingController();  // 密码输入控制器
+  final _formKey = GlobalKey<FormState>(); // 表单验证 Key
+  final _emailController = TextEditingController(); // 用户名称输入控制器
+  final _passwordController = TextEditingController(); // 密码输入控制器
   final _authRepository = SupabaseAuthRepository();
-  bool _obscurePassword = true;                         // 控制密码是否隐藏显示
+  bool _obscurePassword = true; // 控制密码是否隐藏显示
   bool _isLoading = false;
 
   /// 释放输入控制器资源，避免记忆体泄漏
@@ -39,6 +42,15 @@ class _LoginPageState extends State<LoginPage> {
       _isLoading = true;
     });
     try {
+      if (AdminCredentials.matches(
+        usernameOrEmail: _emailController.text,
+        inputPassword: _passwordController.text,
+      )) {
+        if (!mounted) return;
+        Navigator.of(context).pushReplacementNamed(AppRoutes.admin);
+        return;
+      }
+
       final UserModel? user = await _authRepository.login(
         usernameOrEmail: _emailController.text.trim(),
         password: _passwordController.text,
@@ -77,8 +89,7 @@ class _LoginPageState extends State<LoginPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(e.toString())),
       );
-    }
-    finally {
+    } finally {
       if (mounted) {
         setState(() {
           _isLoading = false;
@@ -86,6 +97,7 @@ class _LoginPageState extends State<LoginPage> {
       }
     }
   }
+
   /// 建立登录页面画面
   @override
   Widget build(BuildContext context) {
@@ -117,7 +129,7 @@ class _LoginPageState extends State<LoginPage> {
                 ),
               ),
               const SizedBox(height: 16),
-              
+
               // App Title & Subtitle
               Text(
                 'MyFuel',
@@ -136,7 +148,7 @@ class _LoginPageState extends State<LoginPage> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         const SizedBox(height: 8),
-                        
+
                         // Username
                         TextFormField(
                           controller: _emailController,
@@ -156,7 +168,7 @@ class _LoginPageState extends State<LoginPage> {
                         ),
 
                         const SizedBox(height: 20),
-                        
+
                         // Password
                         TextFormField(
                           controller: _passwordController,
@@ -189,17 +201,23 @@ class _LoginPageState extends State<LoginPage> {
                         ),
 
                         const SizedBox(height: 12),
-                        
+
                         // Forgot Password Link
                         Align(
                           alignment: Alignment.centerRight,
                           child: TextButton(
                             onPressed: () {
-                              Navigator.of(context).pushNamed(AppRoutes.forgotPassword);
+                              Navigator.of(
+                                context,
+                              ).pushNamed(AppRoutes.forgotPassword);
                             },
                             style: TextButton.styleFrom(
-                              foregroundColor: theme.colorScheme.onBackground.withOpacity(0.6),
-                              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+                              foregroundColor: theme.colorScheme.onBackground
+                                  .withOpacity(0.6),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 4,
+                                vertical: 8,
+                              ),
                               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                               minimumSize: Size.zero,
                             ),
@@ -214,21 +232,21 @@ class _LoginPageState extends State<LoginPage> {
                         ),
 
                         const SizedBox(height: 16),
-                        
+
                         // Login Button
                         SizedBox(
                           width: double.infinity,
-                          child:ElevatedButton(
+                          child: ElevatedButton(
                             onPressed: _isLoading ? null : _handleLogin,
                             child: _isLoading
                                 ? const SizedBox(
-                              height: 20,
-                              width: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: Colors.white,
-                              ),
-                            )
+                                    height: 20,
+                                    width: 20,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: Colors.white,
+                                    ),
+                                  )
                                 : const Text('LOGIN'),
                           ),
                         ),

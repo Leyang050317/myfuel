@@ -170,9 +170,6 @@ class _FuelTrackingPageState extends State<FuelTrackingPage> {
     final co2 = FuelCalculator.calculateCO2(fuelUsed);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Fuel Tracking"),
-      ),
       body: Stack(
         children: [
 
