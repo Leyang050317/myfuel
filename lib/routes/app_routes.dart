@@ -9,6 +9,12 @@ import '../features/admin/screens/manage_vehicles_page.dart';
 import '../features/home/screens/home_page.dart';
 import '../features/fuel_price/screens/fuel_trend_page.dart';
 import '../features/map/screens/osm_test_page.dart';
+import '../features/user/screens/fuel_calculator_page.dart';
+import '../features/fuel_tracking/screens/fuel_history_page.dart';
+import '../features/fuel_tracking/screens/refuel_record_page.dart';
+import '../features/fuel_tracking/screens/fuel_dashboard_page.dart';
+import '../features/admin/screens/fuel_claims_page.dart';
+import '../features/admin/screens/fuel_monitoring_page.dart';
 
 /// Application route name constants and route map definitions.
 class AppRoutes {
@@ -22,18 +28,32 @@ class AppRoutes {
   static const String home = '/home';
   static const String fuelTrend = '/fuel-trend';
   static const String osmTest = '/osm-test';
+  static const String fuelCalculator = '/fuel-calculator';
+  static const String fuelClaim = '/fuel-claim';
+  static const String fuelHistory = '/fuel-history';
+  static const String refuelRecord = '/refuel-record';
+  static const String fuelDashboard = '/fuel-dashboard';
+  static const String fuelClaims = '/admin/fuel-claims';
+  static const String fuelMonitoring = '/admin/fuel-monitoring';
 
   static Map<String, WidgetBuilder> get routes => {
-        splash: (context) => const SplashPage(),
-        login: (context) => const LoginPage(),
-        register: (context) => const RegisterPage(),
-        forgotPassword: (context) => const ForgotPasswordPage(),
-        admin: (context) => const AdminPage(),
-        addVehicle: (context) => const AddVehiclePage(),
-        manageVehicles: (context) => const ManageVehiclesPage(),
-        home: (context) => const HomePage(),
-        fuelTrend: (context) => const FuelTrendPage(),
+    splash: (context) => const SplashPage(),
+    login: (context) => const LoginPage(),
+    register: (context) => const RegisterPage(),
+    forgotPassword: (context) => const ForgotPasswordPage(),
+    admin: (context) => const AdminPage(),
+    addVehicle: (context) => const AddVehiclePage(),
+    manageVehicles: (context) => const ManageVehiclesPage(),
+    home: (context) => const HomePage(),
+    fuelTrend: (context) => const FuelTrendPage(),
 
-        osmTest: (context) => const OSMTestPage(),
-      };
+    osmTest: (context) => const OSMTestPage(),
+    fuelCalculator: (context) => const FuelCalculatorPage(),
+    fuelClaim: (context) => const FuelCalculatorPage(),
+    fuelHistory: (context) => const FuelHistoryPage(),
+    refuelRecord: (context) => const RefuelRecordPage(),
+    fuelDashboard: (context) => const FuelDashboardPage(),
+    fuelClaims: (context) => const FuelClaimsPage(),
+    fuelMonitoring: (context) => const FuelMonitoringPage(),
+  };
 }

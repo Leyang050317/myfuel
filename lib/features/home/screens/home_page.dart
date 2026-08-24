@@ -71,7 +71,7 @@ class _HomePageState extends State<HomePage> {
           style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
         ),
         backgroundColor: Colors.white,
-        foregroundColor: theme.colorScheme.onBackground,
+        foregroundColor: theme.colorScheme.onSurface,
         elevation: 0,
         centerTitle: false,
         leading: showSidebar
@@ -94,9 +94,7 @@ class _HomePageState extends State<HomePage> {
             onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(
-                  builder: (_) => const OSMTestPage(),
-                ),
+                MaterialPageRoute(builder: (_) => const OSMTestPage()),
               );
             },
           ),
@@ -122,9 +120,7 @@ class _HomePageState extends State<HomePage> {
                   Navigator.of(context).pop();
                   Navigator.push(
                     context,
-                    MaterialPageRoute(
-                      builder: (_) => const OSMTestPage(),
-                    ),
+                    MaterialPageRoute(builder: (_) => const OSMTestPage()),
                   );
                 },
                 onLogout: () {
@@ -146,9 +142,7 @@ class _HomePageState extends State<HomePage> {
                   onDeveloperTest: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(
-                        builder: (_) => const OSMTestPage(),
-                      ),
+                      MaterialPageRoute(builder: (_) => const OSMTestPage()),
                     );
                   },
                   onLogout: _logout,
@@ -159,9 +153,7 @@ class _HomePageState extends State<HomePage> {
               child: IndexedStack(
                 index: _currentIndex,
                 children: [
-                  _HomeDashboard(
-                    fuelController: _fuelController,
-                  ),
+                  _HomeDashboard(fuelController: _fuelController),
                   const MapPage(),
                   const FuelTrackingPage(),
                 ],
@@ -225,6 +217,32 @@ class _DriverSidebar extends StatelessWidget {
                     onTap: () => onSelect(2),
                   ),
                   _DriverSidebarItem(
+                    icon: Icons.payments_outlined,
+                    label: 'Fuel Claim',
+                    onTap: () => Navigator.of(
+                      context,
+                    ).pushNamed(AppRoutes.fuelCalculator),
+                  ),
+                  _DriverSidebarItem(
+                    icon: Icons.history_outlined,
+                    label: 'Fuel History',
+                    onTap: () =>
+                        Navigator.of(context).pushNamed(AppRoutes.fuelHistory),
+                  ),
+                  _DriverSidebarItem(
+                    icon: Icons.local_gas_station_outlined,
+                    label: 'Add Refuel',
+                    onTap: () =>
+                        Navigator.of(context).pushNamed(AppRoutes.refuelRecord),
+                  ),
+                  _DriverSidebarItem(
+                    icon: Icons.insights_outlined,
+                    label: 'Fuel Dashboard',
+                    onTap: () => Navigator.of(
+                      context,
+                    ).pushNamed(AppRoutes.fuelDashboard),
+                  ),
+                  _DriverSidebarItem(
                     icon: Icons.bug_report_outlined,
                     label: 'Developer Test',
                     onTap: onDeveloperTest,
@@ -266,14 +284,9 @@ class _DriverSidebarItem extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 6),
       child: ListTile(
         selected: selected,
-        selectedTileColor: theme.colorScheme.primary.withOpacity(0.1),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
-        leading: Icon(
-          icon,
-          color: selected ? theme.colorScheme.primary : null,
-        ),
+        selectedTileColor: theme.colorScheme.primary.withValues(alpha: 0.1),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        leading: Icon(icon, color: selected ? theme.colorScheme.primary : null),
         title: Text(
           label,
           style: TextStyle(
@@ -291,9 +304,7 @@ class _DriverSidebarItem extends StatelessWidget {
 class _HomeDashboard extends StatelessWidget {
   final FuelPriceController fuelController;
 
-  const _HomeDashboard({
-    required this.fuelController,
-  });
+  const _HomeDashboard({required this.fuelController});
 
   @override
   Widget build(BuildContext context) {
@@ -307,10 +318,7 @@ class _HomeDashboard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // 欢迎讯息
-            Text(
-              'Welcome to MyFuel!',
-              style: theme.textTheme.titleLarge,
-            ),
+            Text('Welcome to MyFuel!', style: theme.textTheme.titleLarge),
             const SizedBox(height: 4),
             Text(
               'Real-time fuel rates in Malaysia',
@@ -319,10 +327,7 @@ class _HomeDashboard extends StatelessWidget {
             const SizedBox(height: 24),
 
             // 油价资讯标题
-            Text(
-              'Fuel Prices',
-              style: theme.textTheme.titleMedium,
-            ),
+            Text('Fuel Prices', style: theme.textTheme.titleMedium),
 
             const SizedBox(height: 12),
 
@@ -348,9 +353,7 @@ class _HomeDashboard extends StatelessWidget {
               color: theme.colorScheme.primary,
               status: fuelController.fuelPrice == null
                   ? "--"
-                  : fuelController.getStatus(
-                fuelController.ron95Difference,
-              ),
+                  : fuelController.getStatus(fuelController.ron95Difference),
             ),
             const SizedBox(height: 12),
 
@@ -364,9 +367,7 @@ class _HomeDashboard extends StatelessWidget {
               color: theme.colorScheme.secondary,
               status: fuelController.fuelPrice == null
                   ? "--"
-                  : fuelController.getStatus(
-                fuelController.ron97Difference,
-              ),
+                  : fuelController.getStatus(fuelController.ron97Difference),
             ),
 
             const SizedBox(height: 12),
@@ -381,9 +382,7 @@ class _HomeDashboard extends StatelessWidget {
               color: theme.colorScheme.tertiary,
               status: fuelController.fuelPrice == null
                   ? "--"
-                  : fuelController.getStatus(
-                fuelController.dieselDifference,
-              ),
+                  : fuelController.getStatus(fuelController.dieselDifference),
             ),
 
             const SizedBox(height: 28),
@@ -398,9 +397,9 @@ class _HomeDashboard extends StatelessWidget {
   /// 建立单张油价资讯卡片
   Widget _buildFuelPriceCard(
     BuildContext context, {
-    required String title,  // 油品名称
-    required String price,  // 目前油价
-    required Color color,   // 卡片主题颜色
+    required String title, // 油品名称
+    required String price, // 目前油价
+    required Color color, // 卡片主题颜色
     required String status, // 本周价格变化
   }) {
     final theme = Theme.of(context);
@@ -416,13 +415,12 @@ class _HomeDashboard extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(16),
-          color: color.withOpacity(0.08),
-          border: Border.all(color: color.withOpacity(0.2), width: 1.5),
+          color: color.withValues(alpha: 0.08),
+          border: Border.all(color: color.withValues(alpha: 0.2), width: 1.5),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-
             // 左侧显示油品名称及本周价格变化
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -438,7 +436,7 @@ class _HomeDashboard extends StatelessWidget {
                 Text(
                   status,
                   style: theme.textTheme.bodySmall?.copyWith(
-                    color: theme.colorScheme.onBackground.withOpacity(0.55),
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.55),
                   ),
                 ),
               ],

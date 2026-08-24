@@ -435,7 +435,7 @@ class _AddVehiclePageState extends State<AddVehiclePage> {
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
         backgroundColor: Colors.white,
-        foregroundColor: theme.colorScheme.onBackground,
+        foregroundColor: theme.colorScheme.onSurface,
         elevation: 0,
       ),
       body: SafeArea(
@@ -701,7 +701,7 @@ class _DropdownField<T> extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DropdownButtonFormField<T>(
-      value: value,
+      initialValue: value,
       isExpanded: true,
       decoration: InputDecoration(
         labelText: label,

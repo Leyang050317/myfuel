@@ -14,10 +14,7 @@ class TripService {
   Duration? get plannedDuration => _plannedDuration;
 
   void startTrip() {
-    _currentTrip = TripModel(
-      startTime: DateTime.now(),
-      isTracking: true,
-    );
+    _currentTrip = TripModel(startTime: DateTime.now(), isTracking: true);
   }
 
   void stopTrip() {
@@ -39,35 +36,31 @@ class TripService {
       return 0;
     }
 
-    final remaining =
-        _plannedDistanceKm! - _currentTrip!.totalDistanceKm;
+    final remaining = _plannedDistanceKm! - _currentTrip!.totalDistanceKm;
 
     return remaining < 0 ? 0 : remaining;
   }
 
   double get progress {
-
     if (_plannedDistanceKm == null ||
         _plannedDistanceKm == 0 ||
         _currentTrip == null) {
       return 0;
     }
 
-    return (_currentTrip!.totalDistanceKm /
-        _plannedDistanceKm!)
-        .clamp(0.0, 1.0);
+    return (_currentTrip!.totalDistanceKm / _plannedDistanceKm!).clamp(
+      0.0,
+      1.0,
+    );
   }
 
   Duration get remainingDuration {
-
     if (_plannedDuration == null) {
       return Duration.zero;
     }
 
     return Duration(
-      seconds: ((_plannedDuration!.inSeconds) *
-          (1 - progress))
-          .round(),
+      seconds: ((_plannedDuration!.inSeconds) * (1 - progress)).round(),
     );
   }
 
@@ -88,11 +81,8 @@ class TripService {
       location,
     );
     trip.totalDistanceKm += meters / 1000;
-    print("Distance = ${trip.totalDistanceKm.toStringAsFixed(3)} km");
 
     trip.previousLocation = location;
     trip.currentLocation = location;
   }
-
 }
-

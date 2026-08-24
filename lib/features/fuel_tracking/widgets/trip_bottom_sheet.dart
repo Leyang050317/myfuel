@@ -3,10 +3,7 @@ import 'package:flutter/material.dart';
 class TripBottomSheet extends StatelessWidget {
   final Widget child;
 
-  const TripBottomSheet({
-    super.key,
-    required this.child,
-  });
+  const TripBottomSheet({super.key, required this.child});
 
   @override
   Widget build(BuildContext context) {
@@ -15,23 +12,13 @@ class TripBottomSheet extends StatelessWidget {
       minChildSize: 0.13,
       maxChildSize: 0.80,
       snap: true,
-      snapSizes: const [
-        0.20,
-        0.80,
-      ],
+      snapSizes: const [0.20, 0.80],
       builder: (context, scrollController) {
         return Container(
           decoration: const BoxDecoration(
             color: Colors.white,
-            borderRadius: BorderRadius.vertical(
-              top: Radius.circular(24),
-            ),
-            boxShadow: [
-              BoxShadow(
-                blurRadius: 12,
-                color: Colors.black26,
-              ),
-            ],
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+            boxShadow: [BoxShadow(blurRadius: 12, color: Colors.black26)],
           ),
           child: SingleChildScrollView(
             controller: scrollController,

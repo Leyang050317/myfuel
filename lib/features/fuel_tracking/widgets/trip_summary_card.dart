@@ -22,34 +22,24 @@ class TripSummaryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-
     return Card(
-
       elevation: 0,
 
       color: Colors.transparent,
 
       child: Column(
-
         crossAxisAlignment: CrossAxisAlignment.start,
 
         children: [
-
           const Row(
             children: [
-
-              Icon(
-                Icons.location_on,
-                color: Colors.red,
-              ),
+              Icon(Icons.location_on, color: Colors.red),
 
               SizedBox(width: 6),
 
               Text(
                 "Destination",
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                ),
+                style: TextStyle(fontWeight: FontWeight.bold),
               ),
             ],
           ),
@@ -58,25 +48,18 @@ class TripSummaryCard extends StatelessWidget {
 
           Text(
             destination ?? "Select a destination",
-            style: const TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.w600,
-            ),
+            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
           ),
 
           const SizedBox(height: 16),
 
           Row(
             children: [
-
               const Icon(Icons.route),
 
               const SizedBox(width: 8),
 
-              Text(
-                "${remainingDistance.toStringAsFixed(2)} km remaining",
-              ),
-
+              Text("${remainingDistance.toStringAsFixed(2)} km remaining"),
             ],
           ),
 
@@ -84,42 +67,29 @@ class TripSummaryCard extends StatelessWidget {
 
           Row(
             children: [
-
               const Icon(Icons.access_time),
 
               const SizedBox(width: 8),
 
-              Text(
-                "${remainingDuration.inMinutes} min left",
-              ),
-
+              Text("${remainingDuration.inMinutes} min left"),
             ],
           ),
 
           const SizedBox(height: 18),
 
           SizedBox(
-
             width: double.infinity,
 
             child: ElevatedButton(
-
               onPressed: isTracking
                   ? onStop
                   : hasDestination
                   ? onStart
                   : null,
 
-              child: Text(
-                isTracking
-                    ? "Stop Trip"
-                    : "Start Trip",
-              ),
-
+              child: Text(isTracking ? "Stop Trip" : "Start Trip"),
             ),
-
           ),
-
         ],
       ),
     );

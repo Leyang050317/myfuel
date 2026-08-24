@@ -1,4 +1,5 @@
 /// Service for fetching current and historical fuel price data.
+library;
 
 import 'dart:convert';
 import 'package:http/http.dart' as http;
@@ -6,12 +7,34 @@ import '../models/fuel_price_model.dart';
 
 /// 负责向 Government Open Data API 获取油价资料。
 class FuelPriceService {
+  Future<double> getCurrentPriceForFuelType(String fuelType) async {
+    final prices = await getLatestFuelPrices();
+    FuelPriceModel? latest;
+    for (final price in prices) {
+      if (price.seriesType == 'level') {
+        latest = price;
+        break;
+      }
+    }
+    if (latest == null) throw StateError('No current fuel price is available.');
+    switch (fuelType) {
+      case 'RON95':
+        return latest.ron95;
+      case 'RON97':
+        return latest.ron97;
+      case 'Diesel':
+        return latest.diesel;
+      default:
+        throw UnsupportedError(
+          '$fuelType is not supported by the petroleum price API.',
+        );
+    }
+  }
 
   /// 获取最新两笔油价资料：
   /// 第一笔为最新油价（level），
   /// 第二笔为本周油价变化（change_weekly）
   Future<List<FuelPriceModel>> getLatestFuelPrices() async {
-
     /// sort=-date：依日期由新到旧排序
     /// limit=2：只取得最新两笔资料
     final url = Uri.parse(
@@ -29,14 +52,11 @@ class FuelPriceService {
     final List<dynamic> json = jsonDecode(response.body);
 
     // 将每一笔 JSON 资料转换成 FuelPriceModel 对象
-    return json
-        .map((item) => FuelPriceModel.fromJson(item))
-        .toList();
+    return json.map((item) => FuelPriceModel.fromJson(item)).toList();
   }
 
   /// 获取历史油价资料
   Future<List<FuelPriceModel>> getFuelHistory() async {
-
     final url = Uri.parse(
       "https://api.data.gov.my/data-catalogue?id=fuelprice&sort=-date&limit=24",
     );
@@ -50,13 +70,9 @@ class FuelPriceService {
     final List<dynamic> json = jsonDecode(response.body);
 
     // 转换成 FuelPriceModel
-    final prices = json
-        .map((item) => FuelPriceModel.fromJson(item))
-        .toList();
+    final prices = json.map((item) => FuelPriceModel.fromJson(item)).toList();
 
     // 只保留真正的油价（series_type = level）
-    return prices
-        .where((item) => item.seriesType == "level")
-        .toList();
+    return prices.where((item) => item.seriesType == "level").toList();
   }
 }

@@ -1,4 +1,5 @@
 /// Data model representing a Malaysia government fuel price entry.
+library;
 
 class FuelPriceModel {
   final String date;

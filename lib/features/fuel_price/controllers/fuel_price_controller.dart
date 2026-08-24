@@ -1,4 +1,5 @@
 /// Controller managing fuel price data loading and state.
+library;
 
 import '../models/fuel_price_model.dart';
 import '../services/fuel_price_service.dart';

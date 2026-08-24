@@ -105,7 +105,7 @@ class _LoginPageState extends State<LoginPage> {
 
     // 登录页面主体
     return Scaffold(
-      backgroundColor: theme.colorScheme.background,
+      backgroundColor: theme.colorScheme.surface,
       body: SafeArea(
         child: SingleChildScrollView(
           physics: const ClampingScrollPhysics(),
@@ -119,7 +119,7 @@ class _LoginPageState extends State<LoginPage> {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: theme.colorScheme.primary.withOpacity(0.1),
+                  color: theme.colorScheme.primary.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
@@ -212,8 +212,8 @@ class _LoginPageState extends State<LoginPage> {
                               ).pushNamed(AppRoutes.forgotPassword);
                             },
                             style: TextButton.styleFrom(
-                              foregroundColor: theme.colorScheme.onBackground
-                                  .withOpacity(0.6),
+                              foregroundColor: theme.colorScheme.onSurface
+                                  .withValues(alpha: 0.6),
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 4,
                                 vertical: 8,
@@ -266,7 +266,7 @@ class _LoginPageState extends State<LoginPage> {
                   Text(
                     "Don't have an account? ",
                     style: theme.textTheme.bodyMedium?.copyWith(
-                      color: theme.colorScheme.onBackground.withOpacity(0.7),
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
                     ),
                   ),
                   GestureDetector(

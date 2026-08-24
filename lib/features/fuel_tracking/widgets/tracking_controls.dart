@@ -14,7 +14,6 @@ class TrackingControls extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-
         Expanded(
           child: ElevatedButton(
             onPressed: onStart,
@@ -30,7 +29,6 @@ class TrackingControls extends StatelessWidget {
             child: const Text("Stop Trip"),
           ),
         ),
-
       ],
     );
   }

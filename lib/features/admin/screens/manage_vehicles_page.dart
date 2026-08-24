@@ -116,7 +116,7 @@ class _ManageVehiclesPageState extends State<ManageVehiclesPage> {
                     ),
                     const SizedBox(height: 16),
                     DropdownButtonFormField<String>(
-                      value: selectedDriverId ?? '',
+                      initialValue: selectedDriverId ?? '',
                       isExpanded: true,
                       decoration: const InputDecoration(
                         labelText: 'Assign To Driver',
@@ -155,7 +155,7 @@ class _ManageVehiclesPageState extends State<ManageVehiclesPage> {
                     ),
                     const SizedBox(height: 16),
                     DropdownButtonFormField<String>(
-                      value: selectedStatus,
+                      initialValue: selectedStatus,
                       isExpanded: true,
                       decoration: const InputDecoration(
                         labelText: 'Vehicle Status',
@@ -247,7 +247,7 @@ class _ManageVehiclesPageState extends State<ManageVehiclesPage> {
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
         backgroundColor: Colors.white,
-        foregroundColor: theme.colorScheme.onBackground,
+        foregroundColor: theme.colorScheme.onSurface,
         elevation: 0,
         actions: [
           IconButton(
@@ -271,7 +271,7 @@ class _ManageVehiclesPageState extends State<ManageVehiclesPage> {
                 : ListView.separated(
                     padding: const EdgeInsets.all(24),
                     itemCount: _vehicles.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: 12),
+                    separatorBuilder: (_, _) => const SizedBox(height: 12),
                     itemBuilder: (context, index) {
                       final vehicle = _vehicles[index];
                       final assignedDriver = _driverName(vehicle.assignedUserId);
@@ -287,7 +287,7 @@ class _ManageVehiclesPageState extends State<ManageVehiclesPage> {
                                 children: [
                                   CircleAvatar(
                                     backgroundColor: theme.colorScheme.primary
-                                        .withOpacity(0.12),
+                                        .withValues(alpha: 0.12),
                                     foregroundColor: theme.colorScheme.primary,
                                     child: const Icon(
                                       Icons.directions_car_outlined,

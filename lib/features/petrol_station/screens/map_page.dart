@@ -247,7 +247,7 @@ class _MapPageState extends State<MapPage> {
           options: MapOptions(
             initialCenter: currentLocation,
             initialZoom: 15,
-            onTap: (_, __) {
+            onTap: (_, _) {
               setState(() {
                 _selectedStation = null;
                 _route = null;
@@ -278,7 +278,7 @@ class _MapPageState extends State<MapPage> {
                   height: 52,
                   child: Container(
                     decoration: BoxDecoration(
-                      color: Colors.blue.withOpacity(0.14),
+                      color: Colors.blue.withValues(alpha: 0.14),
                       shape: BoxShape.circle,
                     ),
                     child: const Icon(
@@ -400,7 +400,7 @@ class _StationBottomSheet extends StatelessWidget {
             Row(
               children: [
                 CircleAvatar(
-                  backgroundColor: brandColor.withOpacity(0.12),
+                  backgroundColor: brandColor.withValues(alpha: 0.12),
                   foregroundColor: brandColor,
                   child: const Icon(Icons.local_gas_station_rounded),
                 ),
@@ -501,7 +501,7 @@ class _InfoLine extends StatelessWidget {
         Icon(
           icon,
           size: 20,
-          color: theme.colorScheme.onBackground.withOpacity(0.56),
+          color: theme.colorScheme.onSurface.withValues(alpha: 0.56),
         ),
         const SizedBox(width: 8),
         Expanded(

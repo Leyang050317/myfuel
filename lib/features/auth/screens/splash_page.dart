@@ -76,7 +76,7 @@ class _SplashPageState extends State<SplashPage> with SingleTickerProviderStateM
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.15),
+                        color: Colors.black.withValues(alpha: 0.15),
                         blurRadius: 20,
                         offset: const Offset(0, 10),
                       ),
@@ -107,7 +107,7 @@ class _SplashPageState extends State<SplashPage> with SingleTickerProviderStateM
                   style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w400,
-                    color: Colors.white.withOpacity(0.85),
+                    color: Colors.white.withValues(alpha: 0.85),
                     letterSpacing: 0.5,
                   ),
                 ),

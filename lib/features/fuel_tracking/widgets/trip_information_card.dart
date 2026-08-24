@@ -15,7 +15,6 @@ class TripInformationCard extends StatelessWidget {
   final double progress;
   final double plannedDistance;
 
-
   const TripInformationCard({
     super.key,
     required this.distance,
@@ -26,7 +25,11 @@ class TripInformationCard extends StatelessWidget {
     required this.buildInfoRow,
     this.destination,
     this.estimatedDistance,
-    this.etaMinutes, required this.remainingDistance, required this.remainingDuration, required this.progress, required this.plannedDistance,
+    this.etaMinutes,
+    required this.remainingDistance,
+    required this.remainingDuration,
+    required this.progress,
+    required this.plannedDistance,
   });
 
   @override
@@ -38,21 +41,14 @@ class TripInformationCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-
             const Text(
               "Trip Information",
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
 
             const SizedBox(height: 12),
 
-            buildInfoRow(
-              "Travelled",
-              "${distance.toStringAsFixed(2)} km",
-            ),
+            buildInfoRow("Travelled", "${distance.toStringAsFixed(2)} km"),
 
             buildInfoRow(
               "Remaining",
@@ -70,43 +66,19 @@ class TripInformationCard extends StatelessWidget {
                 "${estimatedDistance!.toStringAsFixed(2)} km",
               ),
 
-            if (etaMinutes != null)
-              buildInfoRow(
-                "ETA",
-                "$etaMinutes min",
-              ),
+            if (etaMinutes != null) buildInfoRow("ETA", "$etaMinutes min"),
 
-            buildInfoRow(
-              "ETA Left",
-              "${remainingDuration.inMinutes} min",
-            ),
+            buildInfoRow("ETA Left", "${remainingDuration.inMinutes} min"),
 
-            buildInfoRow(
-              "Fuel Used",
-              "${fuelUsed.toStringAsFixed(2)} L",
-            ),
+            buildInfoRow("Fuel Used", "${fuelUsed.toStringAsFixed(2)} L"),
 
-            buildInfoRow(
-              "Fuel Cost",
-              "RM ${fuelCost.toStringAsFixed(2)}",
-            ),
+            buildInfoRow("Fuel Cost", "RM ${fuelCost.toStringAsFixed(2)}"),
 
-            buildInfoRow(
-              "CO₂",
-              "${co2.toStringAsFixed(2)} kg",
-            ),
+            buildInfoRow("CO₂", "${co2.toStringAsFixed(2)} kg"),
 
-            if (destination != null)
-              buildInfoRow(
-                "Destination",
-                destination!,
-              ),
+            if (destination != null) buildInfoRow("Destination", destination!),
 
-            buildInfoRow(
-              "Status",
-              status,
-            ),
-
+            buildInfoRow("Status", status),
           ],
         ),
       ),

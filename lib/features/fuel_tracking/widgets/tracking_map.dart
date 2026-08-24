@@ -9,6 +9,7 @@ class TrackingMap extends StatelessWidget {
   final LatLng? destination;
   final RouteModel? route;
   final VoidCallback? onMapMoved;
+  final VoidCallback? onMapReady;
 
   const TrackingMap({
     super.key,
@@ -17,6 +18,7 @@ class TrackingMap extends StatelessWidget {
     this.destination,
     this.route,
     this.onMapMoved,
+    this.onMapReady,
   });
 
   @override
@@ -32,13 +34,12 @@ class TrackingMap extends StatelessWidget {
             onMapMoved?.call();
           }
         },
+        onMapReady: onMapReady,
       ),
 
       children: [
-
         TileLayer(
-          urlTemplate:
-          'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+          urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
 
           userAgentPackageName: 'com.myfuel.app',
         ),
@@ -56,7 +57,6 @@ class TrackingMap extends StatelessWidget {
 
         MarkerLayer(
           markers: [
-
             Marker(
               point: currentLocation,
               width: 45,
@@ -69,21 +69,14 @@ class TrackingMap extends StatelessWidget {
             ),
 
             if (destination != null)
-
               Marker(
                 point: destination!,
                 width: 45,
                 height: 45,
-                child: const Icon(
-                  Icons.flag,
-                  color: Colors.red,
-                  size: 38,
-                ),
+                child: const Icon(Icons.flag, color: Colors.red, size: 38),
               ),
-
           ],
         ),
-
       ],
     );
   }

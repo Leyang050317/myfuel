@@ -35,16 +35,29 @@ class VehicleService {
         .toList();
   }
 
+  Future<VehicleModel?> loadAssignedVehicle(String userId) async {
+    final data = await _supabase
+        .from('vehicles')
+        .select()
+        .eq('assigned_user_id', userId)
+        .eq('status', 'Assigned')
+        .maybeSingle();
+    return data == null ? null : VehicleModel.fromJson(data);
+  }
+
   Future<void> updateVehicleAssignment({
     required String vehicleId,
     required String? assignedUserId,
     required String status,
   }) async {
-    await _supabase.from('vehicles').update({
-      'assigned_user_id': assignedUserId,
-      'status': assignedUserId == null ? status : 'Assigned',
-      'updated_at': DateTime.now().toIso8601String(),
-    }).eq('id', vehicleId);
+    await _supabase
+        .from('vehicles')
+        .update({
+          'assigned_user_id': assignedUserId,
+          'status': assignedUserId == null ? status : 'Assigned',
+          'updated_at': DateTime.now().toIso8601String(),
+        })
+        .eq('id', vehicleId);
   }
 
   Future<VehicleSpecModel?> getVehicleSpec({
