@@ -102,14 +102,14 @@ class _SearchPageState extends State<SearchPage> {
     }).toList();
 
     return Scaffold(
-      backgroundColor: theme.colorScheme.background,
+      backgroundColor: theme.colorScheme.surface,
       appBar: AppBar(
         title: const Text(
           'Find Petrol Stations',
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
         backgroundColor: Colors.white,
-        foregroundColor: theme.colorScheme.onBackground,
+        foregroundColor: theme.colorScheme.onSurface,
         elevation: 0,
       ),
       body: SafeArea(
@@ -155,7 +155,7 @@ class _SearchPageState extends State<SearchPage> {
                       selected: isSelected,
                       label: Text(brand),
                       labelStyle: TextStyle(
-                        color: isSelected ? Colors.white : theme.colorScheme.onBackground,
+                        color: isSelected ? Colors.white : theme.colorScheme.onSurface,
                         fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                       ),
                       selectedColor: AppTheme.primaryColor,
@@ -258,7 +258,7 @@ class _SearchPageState extends State<SearchPage> {
                                         station['address'],
                                         style: TextStyle(
                                           fontSize: 12,
-                                          color: theme.colorScheme.onBackground.withOpacity(0.55),
+                                          color: theme.colorScheme.onSurface.withValues(alpha: 0.55),
                                         ),
                                       ),
                                       const SizedBox(height: 12),

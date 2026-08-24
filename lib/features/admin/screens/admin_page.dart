@@ -21,7 +21,7 @@ class AdminPage extends StatelessWidget {
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
         backgroundColor: Colors.white,
-        foregroundColor: theme.colorScheme.onBackground,
+        foregroundColor: theme.colorScheme.onSurface,
         elevation: 0,
         leading: showSidebar
             ? null
@@ -59,14 +59,10 @@ class AdminPage extends StatelessWidget {
             if (showSidebar)
               SizedBox(
                 width: 260,
-                child: _AdminSidebar(
-                  onLogout: () => _logout(context),
-                ),
+                child: _AdminSidebar(onLogout: () => _logout(context)),
               ),
             if (showSidebar) const VerticalDivider(width: 1),
-            const Expanded(
-              child: _AdminDashboardContent(),
-            ),
+            const Expanded(child: _AdminDashboardContent()),
           ],
         ),
       ),
@@ -78,10 +74,7 @@ class _AdminSidebar extends StatelessWidget {
   final VoidCallback onLogout;
   final bool showTopSpacer;
 
-  const _AdminSidebar({
-    required this.onLogout,
-    this.showTopSpacer = false,
-  });
+  const _AdminSidebar({required this.onLogout, this.showTopSpacer = false});
 
   void _closeDrawerIfOpen(BuildContext context) {
     if (Scaffold.maybeOf(context)?.isDrawerOpen == true) {
@@ -137,12 +130,13 @@ class _AdminSidebar extends StatelessWidget {
                     icon: Icons.payments_outlined,
                     label: 'Fuel Claims',
                     onTap: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Fuel Claims coming soon.'),
-                        ),
-                      );
+                      _openRoute(context, AppRoutes.fuelClaims);
                     },
+                  ),
+                  _SidebarItem(
+                    icon: Icons.insights_outlined,
+                    label: 'Fuel Monitoring',
+                    onTap: () => _openRoute(context, AppRoutes.fuelMonitoring),
                   ),
                   _SidebarItem(
                     icon: Icons.location_on_outlined,
@@ -192,14 +186,9 @@ class _SidebarItem extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 6),
       child: ListTile(
         selected: selected,
-        selectedTileColor: theme.colorScheme.primary.withOpacity(0.1),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
-        leading: Icon(
-          icon,
-          color: selected ? theme.colorScheme.primary : null,
-        ),
+        selectedTileColor: theme.colorScheme.primary.withValues(alpha: 0.1),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        leading: Icon(icon, color: selected ? theme.colorScheme.primary : null),
         title: Text(
           label,
           style: TextStyle(
@@ -223,10 +212,7 @@ class _AdminDashboardContent extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.all(24),
       children: [
-        Text(
-          'Welcome, Admin',
-          style: theme.textTheme.titleLarge,
-        ),
+        Text('Welcome, Admin', style: theme.textTheme.titleLarge),
         const SizedBox(height: 6),
         Text(
           'Manage MyFuel operations from one place.',
@@ -259,11 +245,13 @@ class _AdminDashboardContent extends StatelessWidget {
                 Navigator.of(context).pushNamed(AppRoutes.manageVehicles);
               },
             ),
-            const _AdminActionCard(
+            _AdminActionCard(
               title: 'Fuel Claims',
               subtitle: 'Track fuel spending',
               icon: Icons.payments_outlined,
               color: Color(0xFFFFA000),
+              onTap: () =>
+                  Navigator.of(context).pushNamed(AppRoutes.fuelClaims),
             ),
             const _AdminActionCard(
               title: 'Live Tracking',
@@ -281,10 +269,7 @@ class _AdminDashboardContent extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  'Quick Status',
-                  style: theme.textTheme.titleMedium,
-                ),
+                Text('Quick Status', style: theme.textTheme.titleMedium),
                 const SizedBox(height: 16),
                 const _StatusRow(
                   label: 'System Role',
@@ -329,7 +314,8 @@ class _AdminActionCard extends StatelessWidget {
       margin: EdgeInsets.zero,
       child: InkWell(
         borderRadius: BorderRadius.circular(20),
-        onTap: onTap ??
+        onTap:
+            onTap ??
             () {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(content: Text('$title admin feature coming soon.')),
@@ -341,7 +327,7 @@ class _AdminActionCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               CircleAvatar(
-                backgroundColor: color.withOpacity(0.12),
+                backgroundColor: color.withValues(alpha: 0.12),
                 foregroundColor: color,
                 child: Icon(icon),
               ),
@@ -386,12 +372,7 @@ class _StatusRow extends StatelessWidget {
       children: [
         Icon(icon, color: theme.colorScheme.primary),
         const SizedBox(width: 12),
-        Expanded(
-          child: Text(
-            label,
-            style: theme.textTheme.bodyMedium,
-          ),
-        ),
+        Expanded(child: Text(label, style: theme.textTheme.bodyMedium)),
         Text(
           value,
           style: theme.textTheme.bodyLarge?.copyWith(

@@ -13,49 +13,78 @@ import '../widgets/tracking_map.dart';
 import '../widgets/trip_bottom_sheet.dart';
 import '../widgets/trip_summary_card.dart';
 import '../widgets/trip_information_card.dart';
+import '../../admin/models/vehicle_model.dart';
+import '../../admin/services/vehicle_service.dart';
+import '../../fuel_price/services/fuel_price_service.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../user/database/local_database.dart';
 
 class FuelTrackingPage extends StatefulWidget {
   const FuelTrackingPage({super.key});
 
   @override
-  State<FuelTrackingPage> createState() =>
-      _FuelTrackingPageState();
+  State<FuelTrackingPage> createState() => _FuelTrackingPageState();
 }
 
 class _FuelTrackingPageState extends State<FuelTrackingPage> {
-
   final MapController _mapController = MapController();
 
-  final LocationService _locationService =
-  LocationService();
+  final LocationService _locationService = LocationService();
 
-  final TripService _tripService =
-      TripService.instance;
+  final TripService _tripService = TripService.instance;
 
-  final RouteService _routeService =
-  RouteService();
+  final RouteService _routeService = RouteService();
 
-  final TextEditingController
-  _searchController =
-  TextEditingController();
+  final TextEditingController _searchController = TextEditingController();
 
-  StreamSubscription<Position>?
-  _positionStream;
+  StreamSubscription<Position>? _positionStream;
   Position? _currentPosition;
   final Distance _distance = const Distance();
-  DestinationModel?_selectedDestination;
+  DestinationModel? _selectedDestination;
   RouteModel? _plannedRoute;
   List<DestinationModel> _searchResults = [];
   Timer? _searchDebounce;
+  VehicleModel? _calculationVehicle;
+  double? _fuelPrice;
+  String? _calculationError;
+  bool _isMapReady = false;
 
   @override
   void initState() {
     super.initState();
 
-    WidgetsBinding.instance
-        .addPostFrameCallback((_) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
       _initializeLocation();
     });
+    _loadCalculationContext();
+  }
+
+  Future<void> _loadCalculationContext() async {
+    final userId = Supabase.instance.client.auth.currentUser?.id;
+    if (userId == null) return;
+    try {
+      final vehicle = await VehicleService().loadAssignedVehicle(userId);
+      if (vehicle == null) {
+        throw StateError('No vehicle is assigned to this user.');
+      }
+      if (!FuelCalculator.supportsFuelType(vehicle.fuelType)) {
+        throw UnsupportedError(
+          '${vehicle.fuelType} is not supported by the petroleum calculator.',
+        );
+      }
+      final price = await FuelPriceService().getCurrentPriceForFuelType(
+        vehicle.fuelType,
+      );
+      if (mounted) {
+        setState(() {
+          _calculationVehicle = vehicle;
+          _fuelPrice = price;
+          _calculationError = null;
+        });
+      }
+    } catch (e) {
+      if (mounted) setState(() => _calculationError = e.toString());
+    }
   }
 
   @override
@@ -65,114 +94,73 @@ class _FuelTrackingPageState extends State<FuelTrackingPage> {
     _searchController.dispose();
     super.dispose();
   }
+
   Future<void> _initializeLocation() async {
-    bool granted =
-    await _locationService
-        .requestPermission();
+    bool granted = await _locationService.requestPermission();
 
-    if (!granted) return;
+    if (!mounted || !granted) return;
 
-    final current =
-    await _locationService.getCurrentLocation();
+    final current = await _locationService.getCurrentLocation();
+    if (!mounted) return;
 
     setState(() {
       _currentPosition = current;
     });
-    _mapController.move(
-      LatLng(
-        current.latitude,
-        current.longitude,
-      ),
-      16,
-    );
-    _hasCenteredOnUser = true;
+    _moveMapToLocation(LatLng(current.latitude, current.longitude), 16);
 
-    _positionStream =
-        _locationService
-            .getPositionStream().listen((position) {
-          setState(() {
-            _currentPosition = position;
-          });
-          if (_followUser) {
-            _mapController.move(
-              LatLng(
-                position.latitude,
-                position.longitude,
-              ),
-              _mapController.camera.zoom,
-            );
+    _positionStream = _locationService.getPositionStream().listen((position) {
+      if (!mounted) return;
+      setState(() {
+        _currentPosition = position;
+      });
+      final location = LatLng(position.latitude, position.longitude);
+      if (_followUser || !_hasCenteredOnUser || _tripService.isTracking) {
+        _moveMapToLocation(location, _hasCenteredOnUser ? null : 16);
+      }
+
+      if (_tripService.isTracking) {
+        _tripService.updateLocation(location);
+
+        if (_selectedDestination != null) {
+          final distance = Geolocator.distanceBetween(
+            position.latitude,
+            position.longitude,
+
+            _selectedDestination!.location.latitude,
+            _selectedDestination!.location.longitude,
+          );
+
+          if (distance <= 30) {
+            _onArrival();
           }
-          if (!_hasCenteredOnUser) {
-            _mapController.move(
-              LatLng(
-                position.latitude,
-                position.longitude,
-              ),
-              16,
-            );
-            _hasCenteredOnUser = true;
-          }
-
-          if (_tripService.isTracking) {
-            _mapController.move(
-              LatLng(
-                position.latitude,
-                position.longitude,
-              ),
-              _mapController.camera.zoom,
-            );
-
-            _tripService.updateLocation(
-              LatLng(
-                position.latitude,
-                position.longitude,
-              ),
-            );
-
-            if (_selectedDestination != null) {
-
-              final distance =
-              Geolocator.distanceBetween(
-
-                position.latitude,
-                position.longitude,
-
-                _selectedDestination!.location.latitude,
-                _selectedDestination!.location.longitude,
-              );
-
-              if (distance <= 30) {
-                _onArrival();
-              }
-            }
-          }
-        });
+        }
+      }
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     if (_currentPosition == null) {
-      return const Scaffold(
-        body: Center(
-          child: CircularProgressIndicator(),
-        ),
-      );
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     final distance = _tripService.currentTrip?.totalDistanceKm ?? 0;
-    final fuelUsed = FuelCalculator.calculateFuelUsed(distance);
-    const fuelPrice = 3.37;
-    final fuelCost = FuelCalculator.calculateFuelCost(
-      fuelUsed,
-      fuelPrice,
-    );
-
-    final co2 = FuelCalculator.calculateCO2(fuelUsed);
+    final calculation = _calculationVehicle != null && _fuelPrice != null
+        ? FuelCalculator.calculate(
+            vehicle: _calculationVehicle!,
+            userId: Supabase.instance.client.auth.currentUser?.id ?? '',
+            distanceKm: distance,
+            fuelPricePerLiter: _fuelPrice!,
+            source: 'trip',
+          )
+        : null;
+    final fuelUsed = calculation?.fuelUsedLiters ?? 0.0;
+    final fuelCost = calculation?.fuelCost ?? 0.0;
+    final co2 = calculation?.co2Kg ?? 0.0;
 
     return Scaffold(
       body: Stack(
         children: [
-
           Positioned.fill(
             child: TrackingMap(
               mapController: _mapController,
@@ -182,6 +170,7 @@ class _FuelTrackingPageState extends State<FuelTrackingPage> {
               ),
               destination: _selectedDestination?.location,
               route: _plannedRoute,
+              onMapReady: _onMapReady,
               onMapMoved: () {
                 setState(() {
                   _followUser = false;
@@ -228,14 +217,15 @@ class _FuelTrackingPageState extends State<FuelTrackingPage> {
                         _searchDebounce?.cancel();
                         _searchDebounce = Timer(
                           const Duration(milliseconds: 300),
-                              () async {
+                          () async {
                             if (value.trim().isEmpty) {
                               setState(() {
                                 _searchResults.clear();
                               });
                               return;
                             }
-                            final results = await _routeService.searchDestination(value);
+                            final results = await _routeService
+                                .searchDestination(value);
                             results.sort((a, b) {
                               final distanceA = _distance(
                                 LatLng(
@@ -259,12 +249,10 @@ class _FuelTrackingPageState extends State<FuelTrackingPage> {
                             });
                           },
                         );
-
                       },
                     ),
                   ),
                 ),
-
               ),
             ),
           ),
@@ -277,18 +265,13 @@ class _FuelTrackingPageState extends State<FuelTrackingPage> {
                 elevation: 8,
                 borderRadius: BorderRadius.circular(14),
                 child: ConstrainedBox(
-                  constraints: const BoxConstraints(
-                    maxHeight: 250,
-                  ),
+                  constraints: const BoxConstraints(maxHeight: 250),
                   child: ListView.separated(
                     shrinkWrap: true,
                     itemCount: _searchResults.length,
-                    separatorBuilder: (_, __) =>
-                    const Divider(height: 1),
+                    separatorBuilder: (_, _) => const Divider(height: 1),
                     itemBuilder: (context, index) {
-
-                      final destination =
-                      _searchResults[index];
+                      final destination = _searchResults[index];
 
                       return ListTile(
                         leading: const Icon(
@@ -297,17 +280,9 @@ class _FuelTrackingPageState extends State<FuelTrackingPage> {
                         ),
                         title: Row(
                           children: [
-                            Expanded(
-                              child: Text(destination.name),
-                            ),
+                            Expanded(child: Text(destination.name)),
                             Text(
-                              "${(_distance(
-                                LatLng(
-                                  _currentPosition!.latitude,
-                                  _currentPosition!.longitude,
-                                ),
-                                destination.location,
-                              ) / 1000).toStringAsFixed(1)} km",
+                              "${(_distance(LatLng(_currentPosition!.latitude, _currentPosition!.longitude), destination.location) / 1000).toStringAsFixed(1)} km",
                               style: const TextStyle(
                                 fontSize: 12,
                                 color: Colors.grey,
@@ -333,27 +308,38 @@ class _FuelTrackingPageState extends State<FuelTrackingPage> {
                           });
 
                           // Calculate route
-                          final route = await _routeService.getRoute(
-                            start: LatLng(
-                              _currentPosition!.latitude,
-                              _currentPosition!.longitude,
-                            ),
-                            destination: destination.location,
-                          );
+                          try {
+                            final route = await _routeService.getRoute(
+                              start: LatLng(
+                                _currentPosition!.latitude,
+                                _currentPosition!.longitude,
+                              ),
+                              destination: destination.location,
+                            );
+                            if (!mounted) return;
 
-                          if (route == null) return;
+                            setState(() {
+                              _plannedRoute = route;
+                            });
+                            _tripService.setPlannedRoute(
+                              distanceKm: route.distanceKm,
+                              duration: route.duration,
+                            );
 
-                          setState(() {
-                            _plannedRoute = route;
-                          });
-
-                          // Zoom map to fit route
-                          _mapController.fitCamera(
-                            CameraFit.bounds(
-                              bounds: LatLngBounds.fromPoints(route.polyline),
-                              padding: const EdgeInsets.all(60),
-                            ),
-                          );
+                            if (_isMapReady) {
+                              _mapController.fitCamera(
+                                CameraFit.bounds(
+                                  bounds: LatLngBounds.fromPoints(route.polyline),
+                                  padding: const EdgeInsets.all(60),
+                                ),
+                              );
+                            }
+                          } on RouteServiceException catch (error) {
+                            if (!mounted) return;
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text(error.message)),
+                            );
+                          }
                         },
                       );
                     },
@@ -367,23 +353,18 @@ class _FuelTrackingPageState extends State<FuelTrackingPage> {
             child: FloatingActionButton(
               heroTag: "followButton",
               mini: true,
-              backgroundColor:
-              _followUser ? Colors.blue : Colors.grey,
-              child: const Icon(
-                Icons.my_location,
-                color: Colors.white,
-              ),
+              backgroundColor: _followUser ? Colors.blue : Colors.grey,
+              child: const Icon(Icons.my_location, color: Colors.white),
               onPressed: () {
                 if (_currentPosition == null) return;
                 setState(() {
                   _followUser = true;
                 });
-                _mapController.move(
+                _moveMapToLocation(
                   LatLng(
                     _currentPosition!.latitude,
                     _currentPosition!.longitude,
                   ),
-                  _mapController.camera.zoom,
                 );
               },
             ),
@@ -396,14 +377,12 @@ class _FuelTrackingPageState extends State<FuelTrackingPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-
                     TripSummaryCard(
                       destination: _selectedDestination?.name,
                       remainingDistance: _tripService.remainingDistanceKm,
                       remainingDuration: _tripService.remainingDuration,
                       isTracking: _tripService.isTracking,
-                      hasDestination:
-                      _selectedDestination != null,
+                      hasDestination: _selectedDestination != null,
 
                       onStart: () {
                         _tripService.startTrip();
@@ -412,6 +391,7 @@ class _FuelTrackingPageState extends State<FuelTrackingPage> {
 
                       onStop: () {
                         _tripService.stopTrip();
+                        _saveTripCalculation();
                         _searchController.clear();
                         setState(() {
                           _plannedRoute = null;
@@ -443,7 +423,16 @@ class _FuelTrackingPageState extends State<FuelTrackingPage> {
 
                       buildInfoRow: _buildInfoRow,
                     ),
-
+                    if (_calculationError != null)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8),
+                        child: Text(
+                          'Fuel calculation unavailable: $_calculationError',
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.error,
+                          ),
+                        ),
+                      ),
                   ],
                 ),
               ),
@@ -454,30 +443,42 @@ class _FuelTrackingPageState extends State<FuelTrackingPage> {
       ),
     );
   }
+
   bool _hasCenteredOnUser = false;
   bool _arrivalHandled = false;
   bool _followUser = true;
+
+  void _onMapReady() {
+    if (!mounted) return;
+    _isMapReady = true;
+    final position = _currentPosition;
+    if (position != null) {
+      _moveMapToLocation(LatLng(position.latitude, position.longitude), 16);
+    }
+  }
+
+  void _moveMapToLocation(LatLng location, [double? zoom]) {
+    if (!mounted || !_isMapReady) return;
+    _mapController.move(location, zoom ?? _mapController.camera.zoom);
+    _hasCenteredOnUser = true;
+  }
+
   Future<void> _onArrival() async {
     if (_arrivalHandled) return;
     _arrivalHandled = true;
     setState(() {
       _tripService.stopTrip();
     });
+    await _saveTripCalculation();
     if (!mounted) return;
     await showDialog(
       context: context,
       barrierDismissible: false,
       builder: (_) {
         return AlertDialog(
-          icon: const Icon(
-            Icons.flag_circle,
-            color: Colors.green,
-            size: 48,
-          ),
+          icon: const Icon(Icons.flag_circle, color: Colors.green, size: 48),
           title: const Text("You've Arrived!"),
-          content: const Text(
-            "Trip completed successfully.",
-          ),
+          content: const Text("Trip completed successfully."),
           actions: [
             FilledButton(
               onPressed: () {
@@ -491,20 +492,34 @@ class _FuelTrackingPageState extends State<FuelTrackingPage> {
     );
     _arrivalHandled = false;
   }
-  Widget _buildInfoRow(
-      String title,
-      String value,
-      ) {
+
+  Future<void> _saveTripCalculation() async {
+    if (_calculationVehicle == null || _fuelPrice == null) return;
+    final distance = _tripService.currentTrip?.totalDistanceKm ?? 0;
+    if (distance <= 0) return;
+    try {
+      await LocalDatabase.instance.saveCalculation(
+        FuelCalculator.calculate(
+          tripId: _tripService.currentTrip?.id,
+          vehicle: _calculationVehicle!,
+          userId: Supabase.instance.client.auth.currentUser?.id ?? '',
+          distanceKm: distance,
+          fuelPricePerLiter: _fuelPrice!,
+          source: 'trip',
+        ),
+      );
+    } catch (_) {
+      // Local history failure must not interrupt trip completion.
+    }
+  }
+
+  Widget _buildInfoRow(String title, String value) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-
-          SizedBox(
-            width: 90,
-            child: Text(title),
-          ),
+          SizedBox(width: 90, child: Text(title)),
 
           const SizedBox(width: 8),
 
@@ -514,12 +529,9 @@ class _FuelTrackingPageState extends State<FuelTrackingPage> {
               textAlign: TextAlign.right,
               overflow: TextOverflow.ellipsis,
               maxLines: 2,
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-              ),
+              style: const TextStyle(fontWeight: FontWeight.bold),
             ),
           ),
-
         ],
       ),
     );

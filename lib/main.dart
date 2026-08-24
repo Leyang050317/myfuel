@@ -1,10 +1,18 @@
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'app.dart';
 
 /// Entry point of the MyFuel application.
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  if (!kIsWeb && (Platform.isWindows || Platform.isLinux || Platform.isMacOS)) {
+    sqfliteFfiInit();
+    databaseFactory = databaseFactoryFfi;
+  }
 
   await Supabase.initialize(
     url: 'https://rbctfvooqrzdoyzdllua.supabase.co',

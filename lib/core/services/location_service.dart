@@ -1,4 +1,5 @@
 /// Core service for accessing device GPS and location data.
+library;
 
 import 'package:geolocator/geolocator.dart';
 

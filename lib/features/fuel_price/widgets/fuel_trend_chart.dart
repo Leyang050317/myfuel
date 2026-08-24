@@ -1,4 +1,5 @@
 /// Widget rendering a chart of historical fuel price trends.
+library;
 
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
@@ -148,7 +149,7 @@ class FuelTrendChart extends StatelessWidget {
                 color: Theme.of(context)
                     .colorScheme
                     .primary
-                    .withOpacity(0.15),
+                    .withValues(alpha: 0.15),
               ),
             ),
           ],

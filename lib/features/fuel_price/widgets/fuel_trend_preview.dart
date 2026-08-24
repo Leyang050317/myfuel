@@ -67,7 +67,7 @@ class _FuelTrendPreviewState extends State<FuelTrendPreview> {
                 height: 120,
                 width: double.infinity,
                 decoration: BoxDecoration(
-                  color: theme.colorScheme.primary.withOpacity(0.08),
+                  color: theme.colorScheme.primary.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: _controller.history.isEmpty

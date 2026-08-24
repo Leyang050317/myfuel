@@ -166,7 +166,7 @@ class _RegisterPageState extends State<RegisterPage> {
 
     // 注册页面主体
     return Scaffold(
-      backgroundColor: theme.colorScheme.background,
+      backgroundColor: theme.colorScheme.surface,
       body: SafeArea(
         child: SingleChildScrollView(
           physics: const ClampingScrollPhysics(),
@@ -183,7 +183,7 @@ class _RegisterPageState extends State<RegisterPage> {
                   IconButton(
                     onPressed: () => Navigator.of(context).pop(),
                     icon: const Icon(Icons.arrow_back_ios_new_rounded),
-                    color: theme.colorScheme.onBackground,
+                    color: theme.colorScheme.onSurface,
                   ),
                 ],
               ),
@@ -200,7 +200,7 @@ class _RegisterPageState extends State<RegisterPage> {
                 'Join MyFuel to navigate petrol stations easily',
                 textAlign: TextAlign.center,
                 style: theme.textTheme.bodyMedium?.copyWith(
-                  color: theme.colorScheme.onBackground.withOpacity(0.6),
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
                 ),
               ),
               
@@ -403,7 +403,7 @@ class _RegisterPageState extends State<RegisterPage> {
                   Text(
                     "Already have an account? ",
                     style: theme.textTheme.bodyMedium?.copyWith(
-                      color: theme.colorScheme.onBackground.withOpacity(0.7),
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
                     ),
                   ),
                   GestureDetector(

@@ -77,7 +77,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
 
     // 忘记密码页面主体
     return Scaffold(
-      backgroundColor: theme.colorScheme.background,
+      backgroundColor: theme.colorScheme.surface,
       body: SafeArea(
         child: SingleChildScrollView(
           physics: const ClampingScrollPhysics(),
@@ -94,7 +94,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                   IconButton(
                     onPressed: () => Navigator.of(context).pop(),
                     icon: const Icon(Icons.arrow_back_ios_new_rounded),
-                    color: theme.colorScheme.onBackground,
+                    color: theme.colorScheme.onSurface,
                   ),
                 ],
               ),
@@ -105,7 +105,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: theme.colorScheme.primary.withOpacity(0.1),
+                  color: theme.colorScheme.primary.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
@@ -128,7 +128,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                   'Enter your registered email address below. We will send you a reset link instructions shortly.',
                   textAlign: TextAlign.center,
                   style: theme.textTheme.bodyMedium?.copyWith(
-                    color: theme.colorScheme.onBackground.withOpacity(0.6),
+                    color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
                     height: 1.5,
                   ),
                 ),
