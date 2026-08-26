@@ -15,6 +15,7 @@ import '../features/fuel_tracking/screens/refuel_record_page.dart';
 import '../features/fuel_tracking/screens/fuel_dashboard_page.dart';
 import '../features/admin/screens/fuel_claims_page.dart';
 import '../features/admin/screens/fuel_monitoring_page.dart';
+import '../features/admin/screens/live_tracking_page.dart';
 
 /// Application route name constants and route map definitions.
 class AppRoutes {
@@ -35,6 +36,7 @@ class AppRoutes {
   static const String fuelDashboard = '/fuel-dashboard';
   static const String fuelClaims = '/admin/fuel-claims';
   static const String fuelMonitoring = '/admin/fuel-monitoring';
+  static const String liveTracking = '/admin/live-tracking';
 
   static Map<String, WidgetBuilder> get routes => {
     splash: (context) => const SplashPage(),
@@ -55,5 +57,6 @@ class AppRoutes {
     fuelDashboard: (context) => const FuelDashboardPage(),
     fuelClaims: (context) => const FuelClaimsPage(),
     fuelMonitoring: (context) => const FuelMonitoringPage(),
+    liveTracking: (context) => const LiveTrackingPage(),
   };
 }

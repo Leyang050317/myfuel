@@ -141,13 +141,7 @@ class _AdminSidebar extends StatelessWidget {
                   _SidebarItem(
                     icon: Icons.location_on_outlined,
                     label: 'Live Tracking',
-                    onTap: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Live Tracking coming soon.'),
-                        ),
-                      );
-                    },
+                    onTap: () => _openRoute(context, AppRoutes.liveTracking),
                   ),
                 ],
               ),
@@ -253,11 +247,13 @@ class _AdminDashboardContent extends StatelessWidget {
               onTap: () =>
                   Navigator.of(context).pushNamed(AppRoutes.fuelClaims),
             ),
-            const _AdminActionCard(
+            _AdminActionCard(
               title: 'Live Tracking',
               subtitle: 'Monitor driver trips',
               icon: Icons.location_on_outlined,
               color: Color(0xFF2E7D32),
+              onTap: () =>
+                  Navigator.of(context).pushNamed(AppRoutes.liveTracking),
             ),
           ],
         ),

@@ -7,6 +7,7 @@ import '../../../core/services/location_service.dart';
 import '../models/destination_model.dart';
 import '../models/route_model.dart';
 import '../services/fuel_calculator.dart';
+import '../services/live_tracking_service.dart';
 import '../services/route_service.dart';
 import '../services/trip_service.dart';
 import '../widgets/tracking_map.dart';
@@ -26,12 +27,14 @@ class FuelTrackingPage extends StatefulWidget {
   State<FuelTrackingPage> createState() => _FuelTrackingPageState();
 }
 
-class _FuelTrackingPageState extends State<FuelTrackingPage> {
+class _FuelTrackingPageState extends State<FuelTrackingPage>
+    with WidgetsBindingObserver {
   final MapController _mapController = MapController();
 
   final LocationService _locationService = LocationService();
 
   final TripService _tripService = TripService.instance;
+  final LiveTrackingService _liveTrackingService = LiveTrackingService();
 
   final RouteService _routeService = RouteService();
 
@@ -47,11 +50,15 @@ class _FuelTrackingPageState extends State<FuelTrackingPage> {
   VehicleModel? _calculationVehicle;
   double? _fuelPrice;
   String? _calculationError;
+  String? _liveTrackingError;
+  DateTime? _lastLivePublishAt;
+  bool _livePublishInProgress = false;
   bool _isMapReady = false;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _initializeLocation();
@@ -89,6 +96,7 @@ class _FuelTrackingPageState extends State<FuelTrackingPage> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _positionStream?.cancel();
     _searchDebounce?.cancel();
     _searchController.dispose();
@@ -108,34 +116,62 @@ class _FuelTrackingPageState extends State<FuelTrackingPage> {
     });
     _moveMapToLocation(LatLng(current.latitude, current.longitude), 16);
 
-    _positionStream = _locationService.getPositionStream().listen((position) {
-      if (!mounted) return;
-      setState(() {
-        _currentPosition = position;
-      });
-      final location = LatLng(position.latitude, position.longitude);
-      if (_followUser || !_hasCenteredOnUser || _tripService.isTracking) {
-        _moveMapToLocation(location, _hasCenteredOnUser ? null : 16);
-      }
+    await _startPositionStream();
+  }
 
-      if (_tripService.isTracking) {
-        _tripService.updateLocation(location);
+  Future<void> _startPositionStream({bool? enableBackgroundTracking}) async {
+    await _positionStream?.cancel();
+    if (!mounted) return;
 
-        if (_selectedDestination != null) {
-          final distance = Geolocator.distanceBetween(
-            position.latitude,
-            position.longitude,
+    _positionStream = _locationService
+        .getPositionStream(
+          enableBackgroundTracking:
+              enableBackgroundTracking ?? _tripService.isTracking,
+        )
+        .listen(
+          (position) {
+            if (!mounted) return;
+            setState(() {
+              _currentPosition = position;
+            });
+            final location = LatLng(position.latitude, position.longitude);
+            if (_followUser || !_hasCenteredOnUser || _tripService.isTracking) {
+              _moveMapToLocation(location, _hasCenteredOnUser ? null : 16);
+            }
 
-            _selectedDestination!.location.latitude,
-            _selectedDestination!.location.longitude,
-          );
+            if (_tripService.isTracking) {
+              _tripService.updateLocation(location);
+              unawaited(_publishLivePosition(position));
 
-          if (distance <= 30) {
-            _onArrival();
-          }
-        }
-      }
-    });
+              if (_selectedDestination != null) {
+                final distance = Geolocator.distanceBetween(
+                  position.latitude,
+                  position.longitude,
+
+                  _selectedDestination!.location.latitude,
+                  _selectedDestination!.location.longitude,
+                );
+
+                if (distance <= 30) {
+                  _onArrival();
+                }
+              }
+            }
+          },
+          onError: (Object error) {
+            if (!mounted) return;
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Live location tracking stopped: $error')),
+            );
+          },
+        );
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      unawaited(_startPositionStream());
+    }
   }
 
   @override
@@ -329,13 +365,15 @@ class _FuelTrackingPageState extends State<FuelTrackingPage> {
                             if (_isMapReady) {
                               _mapController.fitCamera(
                                 CameraFit.bounds(
-                                  bounds: LatLngBounds.fromPoints(route.polyline),
+                                  bounds: LatLngBounds.fromPoints(
+                                    route.polyline,
+                                  ),
                                   padding: const EdgeInsets.all(60),
                                 ),
                               );
                             }
                           } on RouteServiceException catch (error) {
-                            if (!mounted) return;
+                            if (!context.mounted) return;
                             ScaffoldMessenger.of(context).showSnackBar(
                               SnackBar(content: Text(error.message)),
                             );
@@ -386,11 +424,30 @@ class _FuelTrackingPageState extends State<FuelTrackingPage> {
 
                       onStart: () {
                         _tripService.startTrip();
-                        setState(() {});
+                        setState(() {
+                          _followUser = true;
+                        });
+                        final position = _currentPosition;
+                        if (position != null) {
+                          _moveMapToLocation(
+                            LatLng(position.latitude, position.longitude),
+                            16,
+                          );
+                        }
+                        unawaited(
+                          _startPositionStream(enableBackgroundTracking: true),
+                        );
+                        unawaited(
+                          _publishLivePosition(_currentPosition!, force: true),
+                        );
                       },
 
                       onStop: () {
                         _tripService.stopTrip();
+                        unawaited(_liveTrackingService.stopPublishing());
+                        unawaited(
+                          _startPositionStream(enableBackgroundTracking: false),
+                        );
                         _saveTripCalculation();
                         _searchController.clear();
                         setState(() {
@@ -433,6 +490,16 @@ class _FuelTrackingPageState extends State<FuelTrackingPage> {
                           ),
                         ),
                       ),
+                    if (_liveTrackingError != null)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8),
+                        child: Text(
+                          'Admin live tracking unavailable: $_liveTrackingError',
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.error,
+                          ),
+                        ),
+                      ),
                   ],
                 ),
               ),
@@ -469,6 +536,8 @@ class _FuelTrackingPageState extends State<FuelTrackingPage> {
     setState(() {
       _tripService.stopTrip();
     });
+    unawaited(_liveTrackingService.stopPublishing());
+    unawaited(_startPositionStream(enableBackgroundTracking: false));
     await _saveTripCalculation();
     if (!mounted) return;
     await showDialog(
@@ -510,6 +579,40 @@ class _FuelTrackingPageState extends State<FuelTrackingPage> {
       );
     } catch (_) {
       // Local history failure must not interrupt trip completion.
+    }
+  }
+
+  Future<void> _publishLivePosition(
+    Position position, {
+    bool force = false,
+  }) async {
+    final trip = _tripService.currentTrip;
+    if (trip == null || !trip.isTracking || _livePublishInProgress) return;
+
+    final now = DateTime.now();
+    if (!force &&
+        _lastLivePublishAt != null &&
+        now.difference(_lastLivePublishAt!) < const Duration(seconds: 2)) {
+      return;
+    }
+
+    _livePublishInProgress = true;
+    try {
+      await _liveTrackingService.publishPosition(
+        position: position,
+        trip: trip,
+        vehicle: _calculationVehicle,
+        destinationName: _selectedDestination?.name,
+        destination: _selectedDestination?.location,
+      );
+      _lastLivePublishAt = now;
+      if (mounted && _liveTrackingError != null) {
+        setState(() => _liveTrackingError = null);
+      }
+    } catch (error) {
+      if (mounted) setState(() => _liveTrackingError = error.toString());
+    } finally {
+      _livePublishInProgress = false;
     }
   }
 

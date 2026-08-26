@@ -1,64 +1,72 @@
 /// Core service for accessing device GPS and location data.
 library;
 
+import 'package:flutter/foundation.dart';
 import 'package:geolocator/geolocator.dart';
 
 class LocationService {
-
   /// Request location permission
   Future<bool> requestPermission() async {
-
-    bool serviceEnabled =
-    await Geolocator.isLocationServiceEnabled();
+    final serviceEnabled = await Geolocator.isLocationServiceEnabled();
 
     if (!serviceEnabled) {
       return false;
     }
 
-    LocationPermission permission =
-    await Geolocator.checkPermission();
+    LocationPermission permission = await Geolocator.checkPermission();
 
     if (permission == LocationPermission.denied) {
-      permission =
-      await Geolocator.requestPermission();
+      permission = await Geolocator.requestPermission();
     }
 
-    if (permission ==
-        LocationPermission.deniedForever) {
+    if (permission == LocationPermission.deniedForever) {
       return false;
     }
 
-    return permission ==
-        LocationPermission.always ||
-        permission ==
-            LocationPermission.whileInUse;
+    return permission == LocationPermission.always ||
+        permission == LocationPermission.whileInUse;
   }
 
   /// Get current GPS location once
   Future<Position> getCurrentLocation() async {
-
     return await Geolocator.getCurrentPosition(
-      desiredAccuracy: LocationAccuracy.high,
+      locationSettings: const LocationSettings(accuracy: LocationAccuracy.high),
     );
-
   }
 
   /// Live GPS tracking
-  Stream<Position> getPositionStream() {
+  Stream<Position> getPositionStream({bool enableBackgroundTracking = false}) {
+    final LocationSettings settings;
 
-    return Geolocator.getPositionStream(
+    if (defaultTargetPlatform == TargetPlatform.android) {
+      settings = AndroidSettings(
+        accuracy: LocationAccuracy.bestForNavigation,
+        distanceFilter: 3,
+        intervalDuration: const Duration(seconds: 1),
+        foregroundNotificationConfig: enableBackgroundTracking
+            ? const ForegroundNotificationConfig(
+                notificationTitle: 'MyFuel trip tracking',
+                notificationText: 'Your trip location is being tracked.',
+                enableWakeLock: true,
+              )
+            : null,
+      );
+    } else if (defaultTargetPlatform == TargetPlatform.iOS ||
+        defaultTargetPlatform == TargetPlatform.macOS) {
+      settings = AppleSettings(
+        accuracy: LocationAccuracy.bestForNavigation,
+        distanceFilter: 3,
+        activityType: ActivityType.automotiveNavigation,
+        pauseLocationUpdatesAutomatically: false,
+        showBackgroundLocationIndicator: true,
+      );
+    } else {
+      settings = const LocationSettings(
+        accuracy: LocationAccuracy.bestForNavigation,
+        distanceFilter: 3,
+      );
+    }
 
-      locationSettings:
-      const LocationSettings(
-
-        accuracy: LocationAccuracy.best,
-
-        distanceFilter: 0,
-
-      ),
-
-    );
-
+    return Geolocator.getPositionStream(locationSettings: settings);
   }
-
 }
