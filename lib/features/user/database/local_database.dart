@@ -12,7 +12,8 @@ class LocalDatabase {
   Database? _database;
   Future<Database> get database async {
     if (_database != null) return _database!;
-    if (!kIsWeb && (Platform.isWindows || Platform.isLinux || Platform.isMacOS)) {
+    if (!kIsWeb &&
+        (Platform.isWindows || Platform.isLinux || Platform.isMacOS)) {
       sqfliteFfiInit();
       databaseFactory = databaseFactoryFfi;
     }

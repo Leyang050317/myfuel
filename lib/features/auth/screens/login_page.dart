@@ -58,9 +58,7 @@ class _LoginPageState extends State<LoginPage> {
       if (!mounted) return;
       if (user == null) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('User profile not found.'),
-          ),
+          const SnackBar(content: Text('User profile not found.')),
         );
         return;
       }
@@ -81,14 +79,14 @@ class _LoginPageState extends State<LoginPage> {
           message = 'Too many login attempts. Please try again later.';
           break;
       }
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(message)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(message)));
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.toString())),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(e.toString())));
     } finally {
       if (mounted) {
         setState(() {
@@ -131,10 +129,7 @@ class _LoginPageState extends State<LoginPage> {
               const SizedBox(height: 16),
 
               // App Title & Subtitle
-              Text(
-                'MyFuel',
-                style: theme.textTheme.titleLarge,
-              ),
+              Text('MyFuel', style: theme.textTheme.titleLarge),
               const SizedBox(height: 38),
 
               // 登录表单

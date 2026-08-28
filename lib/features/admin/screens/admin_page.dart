@@ -1,305 +1,204 @@
 import 'package:flutter/material.dart';
 
 import '../../../routes/app_routes.dart';
+import '../../fuel_tracking/models/fuel_claim_model.dart';
+import '../../fuel_tracking/services/fuel_claim_service.dart';
+import '../models/vehicle_model.dart';
+import '../services/vehicle_service.dart';
+import '../widgets/admin_shell.dart';
 
-class AdminPage extends StatelessWidget {
+class AdminPage extends StatefulWidget {
   const AdminPage({super.key});
 
-  void _logout(BuildContext context) {
-    Navigator.of(context).pushReplacementNamed(AppRoutes.login);
-  }
-
   @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final showSidebar = MediaQuery.of(context).size.width >= 720;
-
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          'Admin Dashboard',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        backgroundColor: Colors.white,
-        foregroundColor: theme.colorScheme.onSurface,
-        elevation: 0,
-        leading: showSidebar
-            ? null
-            : Builder(
-                builder: (context) {
-                  return IconButton(
-                    tooltip: 'Menu',
-                    onPressed: () {
-                      Scaffold.of(context).openDrawer();
-                    },
-                    icon: const Icon(Icons.menu_rounded),
-                  );
-                },
-              ),
-        actions: [
-          IconButton(
-            tooltip: 'Logout',
-            onPressed: () => _logout(context),
-            icon: const Icon(Icons.logout_rounded),
-          ),
-          const SizedBox(width: 8),
-        ],
-      ),
-      drawer: showSidebar
-          ? null
-          : Drawer(
-              child: _AdminSidebar(
-                onLogout: () => _logout(context),
-                showTopSpacer: true,
-              ),
-            ),
-      body: SafeArea(
-        child: Row(
-          children: [
-            if (showSidebar)
-              SizedBox(
-                width: 260,
-                child: _AdminSidebar(onLogout: () => _logout(context)),
-              ),
-            if (showSidebar) const VerticalDivider(width: 1),
-            const Expanded(child: _AdminDashboardContent()),
-          ],
-        ),
-      ),
-    );
-  }
+  State<AdminPage> createState() => _AdminPageState();
 }
 
-class _AdminSidebar extends StatelessWidget {
-  final VoidCallback onLogout;
-  final bool showTopSpacer;
+class _AdminPageState extends State<AdminPage> {
+  final _vehicleService = VehicleService();
+  final _fuelClaimService = FuelClaimService();
 
-  const _AdminSidebar({required this.onLogout, this.showTopSpacer = false});
+  List<VehicleModel> _vehicles = [];
+  List<FuelClaimModel> _claims = [];
+  bool _isLoading = true;
 
-  void _closeDrawerIfOpen(BuildContext context) {
-    if (Scaffold.maybeOf(context)?.isDrawerOpen == true) {
-      Navigator.of(context).pop();
+  @override
+  void initState() {
+    super.initState();
+    _loadDashboard();
+  }
+
+  Future<void> _loadDashboard() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final vehicles = await _vehicleService.loadVehicles();
+      final claims = await _fuelClaimService.loadClaims();
+
+      if (!mounted) return;
+
+      setState(() {
+        _vehicles = vehicles;
+        _claims = claims;
+        _isLoading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+
+      setState(() {
+        _isLoading = false;
+      });
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Unable to load dashboard: $e')));
     }
   }
 
-  void _openRoute(BuildContext context, String routeName) {
-    _closeDrawerIfOpen(context);
-    Navigator.of(context).pushNamed(routeName);
-  }
-
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: Colors.white,
-      child: Padding(
-        padding: EdgeInsets.fromLTRB(
-          16,
-          showTopSpacer ? kToolbarHeight + 50 : 18,
-          16,
-          16,
+    return AdminShell(
+      title: 'Admin Dashboard',
+      selectedRoute: AppRoutes.admin,
+      actions: [
+        IconButton(
+          tooltip: 'Refresh',
+          onPressed: _loadDashboard,
+          icon: const Icon(Icons.refresh_rounded),
         ),
-        child: Column(
-          children: [
-            Expanded(
-              child: ListView(
-                padding: EdgeInsets.zero,
-                children: [
-                  _SidebarItem(
-                    icon: Icons.dashboard_outlined,
-                    label: 'Dashboard',
-                    selected: true,
-                    onTap: () {
-                      _closeDrawerIfOpen(context);
-                    },
-                  ),
-                  _SidebarItem(
-                    icon: Icons.add_road_outlined,
-                    label: 'Add Vehicle',
-                    onTap: () {
-                      _openRoute(context, AppRoutes.addVehicle);
-                    },
-                  ),
-                  _SidebarItem(
-                    icon: Icons.assignment_ind_outlined,
-                    label: 'Manage Vehicle',
-                    onTap: () {
-                      _openRoute(context, AppRoutes.manageVehicles);
-                    },
-                  ),
-                  _SidebarItem(
-                    icon: Icons.payments_outlined,
-                    label: 'Fuel Claims',
-                    onTap: () {
-                      _openRoute(context, AppRoutes.fuelClaims);
-                    },
-                  ),
-                  _SidebarItem(
-                    icon: Icons.insights_outlined,
-                    label: 'Fuel Monitoring',
-                    onTap: () => _openRoute(context, AppRoutes.fuelMonitoring),
-                  ),
-                  _SidebarItem(
-                    icon: Icons.location_on_outlined,
-                    label: 'Live Tracking',
-                    onTap: () => _openRoute(context, AppRoutes.liveTracking),
-                  ),
-                ],
-              ),
-            ),
-            const Divider(height: 24),
-            _SidebarItem(
-              icon: Icons.logout_rounded,
-              label: 'Logout',
-              onTap: onLogout,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _SidebarItem extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final VoidCallback onTap;
-  final bool selected;
-
-  const _SidebarItem({
-    required this.icon,
-    required this.label,
-    required this.onTap,
-    this.selected = false,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 6),
-      child: ListTile(
-        selected: selected,
-        selectedTileColor: theme.colorScheme.primary.withValues(alpha: 0.1),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        leading: Icon(icon, color: selected ? theme.colorScheme.primary : null),
-        title: Text(
-          label,
-          style: TextStyle(
-            fontWeight: selected ? FontWeight.bold : FontWeight.w600,
-            color: selected ? theme.colorScheme.primary : null,
-          ),
-        ),
-        onTap: onTap,
-      ),
+      ],
+      child: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : _AdminDashboardContent(vehicles: _vehicles, claims: _claims),
     );
   }
 }
 
 class _AdminDashboardContent extends StatelessWidget {
-  const _AdminDashboardContent();
+  final List<VehicleModel> vehicles;
+  final List<FuelClaimModel> claims;
+
+  const _AdminDashboardContent({required this.vehicles, required this.claims});
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final isWide = MediaQuery.of(context).size.width >= 960;
+    final assignedVehicles = vehicles
+        .where((vehicle) => vehicle.assignedUserId?.isNotEmpty == true)
+        .length;
+    final availableVehicles = vehicles
+        .where((vehicle) => vehicle.status == 'Available')
+        .length;
+    final pendingClaims = claims
+        .where((claim) => claim.status == 'Pending')
+        .length;
+    final attentionItems = _buildAttentionItems(
+      vehicles: vehicles,
+      claims: claims,
+    );
 
     return ListView(
       padding: const EdgeInsets.all(24),
       children: [
-        Text('Welcome, Admin', style: theme.textTheme.titleLarge),
-        const SizedBox(height: 6),
-        Text(
-          'Manage MyFuel operations from one place.',
-          style: theme.textTheme.bodyMedium,
-        ),
-        const SizedBox(height: 24),
         GridView.count(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
-          crossAxisCount: MediaQuery.of(context).size.width >= 960 ? 4 : 2,
+          crossAxisCount: isWide ? 4 : 2,
           mainAxisSpacing: 12,
           crossAxisSpacing: 12,
-          childAspectRatio: 0.95,
+          childAspectRatio: isWide ? 1.35 : 1.15,
           children: [
-            _AdminActionCard(
-              title: 'Add Vehicle',
-              subtitle: 'Register fleet vehicles',
-              icon: Icons.add_road_outlined,
+            _SummaryCard(
+              label: 'Total Vehicles',
+              value: vehicles.length.toString(),
+              icon: Icons.directions_car_outlined,
               color: const Color(0xFFD32F2F),
-              onTap: () {
-                Navigator.of(context).pushNamed(AppRoutes.addVehicle);
-              },
             ),
-            _AdminActionCard(
-              title: 'Manage Vehicle',
-              subtitle: 'View assignments',
+            _SummaryCard(
+              label: 'Assigned',
+              value: assignedVehicles.toString(),
               icon: Icons.assignment_ind_outlined,
               color: const Color(0xFF1976D2),
-              onTap: () {
-                Navigator.of(context).pushNamed(AppRoutes.manageVehicles);
-              },
             ),
-            _AdminActionCard(
-              title: 'Fuel Claims',
-              subtitle: 'Track fuel spending',
+            _SummaryCard(
+              label: 'Available',
+              value: availableVehicles.toString(),
+              icon: Icons.verified_outlined,
+              color: const Color(0xFF2E7D32),
+            ),
+            _SummaryCard(
+              label: 'Pending Claims',
+              value: pendingClaims.toString(),
               icon: Icons.payments_outlined,
-              color: Color(0xFFFFA000),
-              onTap: () =>
-                  Navigator.of(context).pushNamed(AppRoutes.fuelClaims),
-            ),
-            _AdminActionCard(
-              title: 'Live Tracking',
-              subtitle: 'Monitor driver trips',
-              icon: Icons.location_on_outlined,
-              color: Color(0xFF2E7D32),
-              onTap: () =>
-                  Navigator.of(context).pushNamed(AppRoutes.liveTracking),
+              color: const Color(0xFFFFA000),
             ),
           ],
         ),
         const SizedBox(height: 24),
-        Card(
-          margin: EdgeInsets.zero,
-          child: Padding(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Quick Status', style: theme.textTheme.titleMedium),
-                const SizedBox(height: 16),
-                const _StatusRow(
-                  label: 'System Role',
-                  value: 'Admin',
-                  icon: Icons.admin_panel_settings_outlined,
-                ),
-                const Divider(height: 24),
-                const _StatusRow(
-                  label: 'Access',
-                  value: 'Local admin account',
-                  icon: Icons.lock_outline_rounded,
-                ),
-              ],
-            ),
+        SizedBox(
+          width: isWide ? 520 : double.infinity,
+          child: _DashboardPanel(
+            title: 'Pending Tasks',
+            emptyText: 'No pending tasks right now.',
+            items: attentionItems,
           ),
         ),
       ],
     );
   }
+
+  List<_DashboardListItem> _buildAttentionItems({
+    required List<VehicleModel> vehicles,
+    required List<FuelClaimModel> claims,
+  }) {
+    final unassignedCount = vehicles
+        .where((vehicle) => vehicle.assignedUserId?.isNotEmpty != true)
+        .length;
+    final maintenanceCount = vehicles
+        .where((vehicle) => vehicle.status == 'Maintenance')
+        .length;
+    final pendingClaimsCount = claims
+        .where((claim) => claim.status == 'Pending')
+        .length;
+
+    return [
+      if (pendingClaimsCount > 0)
+        _DashboardListItem(
+          icon: Icons.payments_outlined,
+          title: '$pendingClaimsCount fuel claims pending',
+          subtitle: 'Review driver fuel claims.',
+          color: const Color(0xFFFFA000),
+        ),
+      if (unassignedCount > 0)
+        _DashboardListItem(
+          icon: Icons.person_off_outlined,
+          title: '$unassignedCount vehicles unassigned',
+          subtitle: 'Assign vehicles to driver accounts.',
+          color: const Color(0xFF1976D2),
+        ),
+      if (maintenanceCount > 0)
+        _DashboardListItem(
+          icon: Icons.build_outlined,
+          title: '$maintenanceCount vehicles under maintenance',
+          subtitle: 'Check vehicle availability before assigning.',
+          color: const Color(0xFFD32F2F),
+        ),
+    ];
+  }
 }
 
-class _AdminActionCard extends StatelessWidget {
-  final String title;
-  final String subtitle;
+class _SummaryCard extends StatelessWidget {
+  final String label;
+  final String value;
   final IconData icon;
   final Color color;
-  final VoidCallback? onTap;
 
-  const _AdminActionCard({
-    required this.title,
-    required this.subtitle,
+  const _SummaryCard({
+    required this.label,
+    required this.value,
     required this.icon,
     required this.color,
-    this.onTap,
   });
 
   @override
@@ -308,74 +207,171 @@ class _AdminActionCard extends StatelessWidget {
 
     return Card(
       margin: EdgeInsets.zero,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(20),
-        onTap:
-            onTap ??
-            () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('$title admin feature coming soon.')),
-              );
-            },
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              CircleAvatar(
-                backgroundColor: color.withValues(alpha: 0.12),
-                foregroundColor: color,
-                child: Icon(icon),
-              ),
-              const Spacer(),
-              Text(
-                title,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: theme.textTheme.titleMedium,
-              ),
-              const SizedBox(height: 4),
-              Text(
-                subtitle,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: theme.textTheme.bodyMedium,
-              ),
-            ],
-          ),
+      elevation: 0,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            CircleAvatar(
+              backgroundColor: color.withValues(alpha: 0.12),
+              foregroundColor: color,
+              child: Icon(icon),
+            ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  value,
+                  style: theme.textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: const Color(0xFF697079),
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ],
         ),
       ),
     );
   }
 }
 
-class _StatusRow extends StatelessWidget {
-  final String label;
-  final String value;
-  final IconData icon;
+class _DashboardPanel extends StatelessWidget {
+  final String title;
+  final String emptyText;
+  final List<_DashboardListItem> items;
 
-  const _StatusRow({
-    required this.label,
-    required this.value,
-    required this.icon,
+  const _DashboardPanel({
+    required this.title,
+    required this.emptyText,
+    required this.items,
   });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return Row(
-      children: [
-        Icon(icon, color: theme.colorScheme.primary),
-        const SizedBox(width: 12),
-        Expanded(child: Text(label, style: theme.textTheme.bodyMedium)),
-        Text(
-          value,
-          style: theme.textTheme.bodyLarge?.copyWith(
-            fontWeight: FontWeight.w600,
-          ),
+    return Card(
+      margin: EdgeInsets.zero,
+      elevation: 0,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      child: Padding(
+        padding: const EdgeInsets.all(18),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              title,
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 14),
+            if (items.isEmpty)
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF1F3F5),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  emptyText,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: const Color(0xFF697079),
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              )
+            else
+              ...items.map(
+                (item) => Padding(
+                  padding: const EdgeInsets.only(bottom: 10),
+                  child: _DashboardListTile(item: item),
+                ),
+              ),
+          ],
         ),
-      ],
+      ),
     );
   }
+}
+
+class _DashboardListTile extends StatelessWidget {
+  final _DashboardListItem item;
+
+  const _DashboardListTile({required this.item});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF1F3F5),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        children: [
+          CircleAvatar(
+            radius: 18,
+            backgroundColor: item.color.withValues(alpha: 0.12),
+            foregroundColor: item.color,
+            child: Icon(item.icon, size: 20),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  item.title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.bodyLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  item.subtitle,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: const Color(0xFF697079),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _DashboardListItem {
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final Color color;
+
+  const _DashboardListItem({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.color,
+  });
 }

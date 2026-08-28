@@ -24,7 +24,6 @@ class _FuelTrendPageState extends State<FuelTrendPage> {
   }
 
   Future<void> _loadHistory() async {
-
     await _controller.loadHistory();
 
     for (final item in _controller.history) {
@@ -40,82 +39,66 @@ class _FuelTrendPageState extends State<FuelTrendPage> {
     final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Fuel Price Trend"),
-        centerTitle: true,
-      ),
+      appBar: AppBar(title: const Text("Fuel Price Trend"), centerTitle: true),
 
-        body: SafeArea(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text("Historical Fuel Prices", style: theme.textTheme.titleLarge),
 
-                Text(
-                  "Historical Fuel Prices",
-                  style: theme.textTheme.titleLarge,
-                ),
+              const SizedBox(height: 6),
 
-                const SizedBox(height: 6),
+              Text(
+                "View Malaysia fuel price trends over the past weeks.",
+                style: theme.textTheme.bodyMedium,
+              ),
 
-                Text(
-                  "View Malaysia fuel price trends over the past weeks.",
-                  style: theme.textTheme.bodyMedium,
-                ),
+              const SizedBox(height: 24),
 
-                const SizedBox(height: 24),
+              // Fuel Selector
+              Wrap(
+                spacing: 12,
+                children: List.generate(3, (index) {
+                  final fuels = ["RON95", "RON97", "Diesel"];
 
-                // Fuel Selector
-                Wrap(
-                  spacing: 12,
-                  children: List.generate(
+                  final fuel = fuels[index];
 
-                    3,
+                  return ChoiceChip(
+                    label: Text(fuel),
 
-                    (index) {
-                      final fuels = [
-                        "RON95",
-                        "RON97",
-                        "Diesel",
-                      ];
+                    selected: selectedFuel == fuel,
 
-                      final fuel = fuels[index];
-
-                      return ChoiceChip(
-                        label: Text(fuel),
-
-                        selected: selectedFuel == fuel,
-
-                        onSelected: (value) {
-                          setState(() {
-                            selectedFuel = fuel;
-                          });
-                        },
-                      );
+                    onSelected: (value) {
+                      setState(() {
+                        selectedFuel = fuel;
+                      });
                     },
+                  );
+                }),
+              ),
+
+              const SizedBox(height: 30),
+
+              Card(
+                elevation: 2,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Padding(
+                  padding: EdgeInsets.all(16),
+                  child: FuelTrendChart(
+                    history: _controller.history,
+                    fuelType: selectedFuel,
                   ),
                 ),
-
-                const SizedBox(height: 30),
-
-                Card(
-                  elevation: 2,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Padding(
-                    padding: EdgeInsets.all(16),
-                    child: FuelTrendChart(
-                      history: _controller.history,
-                      fuelType: selectedFuel,
-                    ),
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
+      ),
     );
   }
 }

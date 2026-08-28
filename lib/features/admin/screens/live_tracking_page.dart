@@ -5,8 +5,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 
+import '../../../routes/app_routes.dart';
 import '../../fuel_tracking/services/live_tracking_service.dart';
 import '../models/live_driver_model.dart';
+import '../widgets/admin_shell.dart';
 
 class LiveTrackingPage extends StatefulWidget {
   const LiveTrackingPage({super.key});
@@ -163,30 +165,26 @@ class _LiveTrackingPageState extends State<LiveTrackingPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          'Live Tracking',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        actions: [
-          Center(
-            child: Padding(
-              padding: const EdgeInsets.only(right: 8),
-              child: Chip(
-                avatar: const Icon(Icons.circle, color: Colors.green, size: 12),
-                label: Text('${_drivers.length} active'),
-              ),
+    return AdminShell(
+      title: 'Live Tracking',
+      selectedRoute: AppRoutes.liveTracking,
+      actions: [
+        Center(
+          child: Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: Chip(
+              avatar: const Icon(Icons.circle, color: Colors.green, size: 12),
+              label: Text('${_drivers.length} active'),
             ),
           ),
-          IconButton(
-            tooltip: 'Show all drivers',
-            onPressed: _drivers.isEmpty ? null : _fitAllDrivers,
-            icon: const Icon(Icons.center_focus_strong),
-          ),
-        ],
-      ),
-      body: Column(
+        ),
+        IconButton(
+          tooltip: 'Show all drivers',
+          onPressed: _drivers.isEmpty ? null : _fitAllDrivers,
+          icon: const Icon(Icons.center_focus_strong),
+        ),
+      ],
+      child: Column(
         children: [
           Expanded(
             flex: 3,

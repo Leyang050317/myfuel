@@ -13,7 +13,7 @@ class FuelPriceModel {
     required this.ron95,
     required this.ron97,
     required this.diesel,
-    required this.seriesType
+    required this.seriesType,
   });
 
   /// 将 Government Open Data API 回传的 JSON 数据转换成 FuelPriceModel 对象，方便 Flutter 程式读取与使用

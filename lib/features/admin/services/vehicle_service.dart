@@ -60,6 +60,16 @@ class VehicleService {
         .eq('id', vehicleId);
   }
 
+  Future<void> deleteVehicles(List<String> vehicleIds) async {
+    if (vehicleIds.isEmpty) {
+      return;
+    }
+
+    for (final vehicleId in vehicleIds) {
+      await _supabase.from('vehicles').delete().eq('id', vehicleId);
+    }
+  }
+
   Future<VehicleSpecModel?> getVehicleSpec({
     required String brand,
     required String model,

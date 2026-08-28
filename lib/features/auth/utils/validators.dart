@@ -40,8 +40,7 @@ class Validators {
       return 'Please enter your email address.';
     }
 
-    final emailRegex =
-    RegExp(r'^[\w\.-]+@[\w\.-]+\.\w+$');
+    final emailRegex = RegExp(r'^[\w\.-]+@[\w\.-]+\.\w+$');
 
     if (!emailRegex.hasMatch(value.trim())) {
       return 'Please enter a valid email address.';
@@ -56,8 +55,7 @@ class Validators {
       return 'Please enter your phone number.';
     }
 
-    final phoneRegex =
-    RegExp(r'^01[0-9]-?[0-9]{7,8}$');
+    final phoneRegex = RegExp(r'^01[0-9]-?[0-9]{7,8}$');
 
     if (!phoneRegex.hasMatch(value.trim())) {
       return 'Please enter a valid Malaysian phone number.';
@@ -72,8 +70,7 @@ class Validators {
       return 'Please enter your IC number.';
     }
 
-    final icRegex =
-    RegExp(r'^\d{6}-?\d{2}-?\d{4}$');
+    final icRegex = RegExp(r'^\d{6}-?\d{2}-?\d{4}$');
 
     if (!icRegex.hasMatch(value.trim())) {
       return 'Please enter a valid IC number.';
@@ -100,9 +97,9 @@ class Validators {
 
   /// Validates confirm password.
   static String? validateConfirmPassword(
-      String? value,
-      String originalPassword,
-      ) {
+    String? value,
+    String originalPassword,
+  ) {
     if (value == null || value.isEmpty) {
       return 'Please confirm your password.';
     }

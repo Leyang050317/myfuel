@@ -7,7 +7,6 @@ import '../models/fuel_price_model.dart';
 
 /// Fuel Trend 折线图
 class FuelTrendChart extends StatelessWidget {
-
   final List<FuelPriceModel> history;
   final String fuelType;
 
@@ -38,12 +37,7 @@ class FuelTrendChart extends StatelessWidget {
           value = reversedHistory[i].ron95;
       }
 
-      spots.add(
-        FlSpot(
-          i.toDouble(),
-          value,
-        ),
-      );
+      spots.add(FlSpot(i.toDouble(), value));
     }
 
     return SizedBox(
@@ -81,10 +75,7 @@ class FuelTrendChart extends StatelessWidget {
             drawVerticalLine: false,
             horizontalInterval: 0.05,
             getDrawingHorizontalLine: (value) {
-              return FlLine(
-                color: Colors.grey.shade300,
-                strokeWidth: 1,
-              );
+              return FlLine(color: Colors.grey.shade300, strokeWidth: 1);
             },
           ),
 
@@ -106,7 +97,7 @@ class FuelTrendChart extends StatelessWidget {
             ),
 
             leftTitles: const AxisTitles(
-              sideTitles: SideTitles(showTitles: false,),
+              sideTitles: SideTitles(showTitles: false),
             ),
 
             bottomTitles: AxisTitles(
@@ -146,10 +137,9 @@ class FuelTrendChart extends StatelessWidget {
 
               belowBarData: BarAreaData(
                 show: true,
-                color: Theme.of(context)
-                    .colorScheme
-                    .primary
-                    .withValues(alpha: 0.15),
+                color: Theme.of(
+                  context,
+                ).colorScheme.primary.withValues(alpha: 0.15),
               ),
             ),
           ],

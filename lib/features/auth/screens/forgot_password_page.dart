@@ -31,9 +31,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
       return;
     }
     try {
-      await _authRepository.requestPasswordReset(
-        _emailController.text.trim(),
-      );
+      await _authRepository.requestPasswordReset(_emailController.text.trim());
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -58,14 +56,14 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
           message = 'Too many requests. Please try again later.';
           break;
       }
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(message)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(message)));
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.toString())),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(e.toString())));
     }
   }
 
@@ -86,7 +84,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               const SizedBox(height: 16),
-              
+
               // 返回登录页面按钮
               Row(
                 mainAxisAlignment: MainAxisAlignment.start,
@@ -98,7 +96,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                   ),
                 ],
               ),
-              
+
               const SizedBox(height: 16),
 
               // 页面图示（重设密码）
@@ -117,10 +115,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
               const SizedBox(height: 24),
 
               // 页面标题
-              Text(
-                'Forgot Password',
-                style: theme.textTheme.titleLarge,
-              ),
+              Text('Forgot Password', style: theme.textTheme.titleLarge),
               const SizedBox(height: 10),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -133,7 +128,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                   ),
                 ),
               ),
-              
+
               const SizedBox(height: 32),
 
               // 重设密码表单
@@ -146,7 +141,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                     child: Column(
                       children: [
                         const SizedBox(height: 8),
-                        
+
                         // Email input field
                         TextFormField(
                           controller: _emailController,

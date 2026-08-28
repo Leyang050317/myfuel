@@ -58,7 +58,9 @@ class RouteService {
     } on TimeoutException {
       throw RouteServiceException('Route request timed out. Please try again.');
     } on http.ClientException catch (error) {
-      throw RouteServiceException('Unable to connect to the routing service: $error');
+      throw RouteServiceException(
+        'Unable to connect to the routing service: $error',
+      );
     } catch (error) {
       throw RouteServiceException('Unable to request a route: $error');
     }
@@ -72,7 +74,9 @@ class RouteService {
     try {
       final data = jsonDecode(response.body);
       if (data is! Map<String, dynamic>) {
-        throw const RouteServiceException('The routing service returned an invalid response.');
+        throw const RouteServiceException(
+          'The routing service returned an invalid response.',
+        );
       }
       if (data['code'] != 'Ok') {
         throw RouteServiceException(
@@ -82,12 +86,17 @@ class RouteService {
 
       final routes = data['routes'];
       if (routes is! List || routes.isEmpty || routes.first is! Map) {
-        throw const RouteServiceException('The routing service returned no route.');
+        throw const RouteServiceException(
+          'The routing service returned no route.',
+        );
       }
       final route = routes.first as Map<String, dynamic>;
       final geometry = route['geometry'];
-      if (geometry is! Map<String, dynamic> || geometry['coordinates'] is! List) {
-        throw const RouteServiceException('The routing service returned an invalid route geometry.');
+      if (geometry is! Map<String, dynamic> ||
+          geometry['coordinates'] is! List) {
+        throw const RouteServiceException(
+          'The routing service returned an invalid route geometry.',
+        );
       }
 
       return RouteModel(
@@ -105,11 +114,17 @@ class RouteService {
     } on RouteServiceException {
       rethrow;
     } on FormatException {
-      throw const RouteServiceException('The routing service returned invalid data.');
+      throw const RouteServiceException(
+        'The routing service returned invalid data.',
+      );
     } on TypeError {
-      throw const RouteServiceException('The routing service returned an incomplete route.');
+      throw const RouteServiceException(
+        'The routing service returned an incomplete route.',
+      );
     } catch (_) {
-      throw const RouteServiceException('The routing service returned an invalid route.');
+      throw const RouteServiceException(
+        'The routing service returned an invalid route.',
+      );
     }
   }
 }

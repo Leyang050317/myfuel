@@ -14,74 +14,47 @@ class OSMTestPage extends StatefulWidget {
 
 class _OSMTestPageState extends State<OSMTestPage> {
   /// Variables
-  Position? _currentPosition; ///latest GPS locations
-  final MapController _mapController = MapController(); ///Move map automatically
-  final LocationService _locationService =
-  LocationService();
+  Position? _currentPosition;
+
+  ///latest GPS locations
+  final MapController _mapController = MapController();
+
+  ///Move map automatically
+  final LocationService _locationService = LocationService();
   StreamSubscription<Position>? _positionStream;
   //get current locations
 
   Future<void> _initializeLocation() async {
-
-    bool granted =
-    await _locationService.requestPermission();
+    bool granted = await _locationService.requestPermission();
 
     if (!granted) return;
 
-    Position current =
-    await _locationService.getCurrentLocation();
+    Position current = await _locationService.getCurrentLocation();
 
     setState(() {
-
       _currentPosition = current;
-
     });
 
-    _mapController.move(
+    _mapController.move(LatLng(current.latitude, current.longitude), 17);
 
-      LatLng(
-        current.latitude,
-        current.longitude,
-      ),
+    _positionStream = _locationService.getPositionStream().listen((position) {
+      setState(() {
+        _currentPosition = position;
+      });
 
-      17,
+      _mapController.move(
+        LatLng(position.latitude, position.longitude),
 
-    );
-
-    _positionStream =
-        _locationService
-            .getPositionStream()
-            .listen((position) {
-
-          setState(() {
-
-            _currentPosition = position;
-
-          });
-
-          _mapController.move(
-
-            LatLng(
-              position.latitude,
-              position.longitude,
-            ),
-
-            _mapController.camera.zoom,
-
-          );
-
-        });
-
+        _mapController.camera.zoom,
+      );
+    });
   }
-
 
   @override
   void initState() {
-
     super.initState();
 
     _initializeLocation();
-
   }
 
   @override
@@ -103,8 +76,7 @@ class _OSMTestPageState extends State<OSMTestPage> {
         ),
         children: [
           TileLayer(
-            urlTemplate:
-            'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+            urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
             userAgentPackageName: 'com.example.myfuel',
           ),
 
@@ -112,25 +84,26 @@ class _OSMTestPageState extends State<OSMTestPage> {
             markers: _currentPosition == null
                 ? []
                 : [
-              Marker(
-                point: LatLng(
-                  _currentPosition!.latitude,
-                  _currentPosition!.longitude,
-                ),
-                width: 50,
-                height: 50,
-                child: const Icon(
-                  Icons.my_location,
-                  color: Colors.blue,
-                  size: 40,
-                ),
-              ),
-            ],
+                    Marker(
+                      point: LatLng(
+                        _currentPosition!.latitude,
+                        _currentPosition!.longitude,
+                      ),
+                      width: 50,
+                      height: 50,
+                      child: const Icon(
+                        Icons.my_location,
+                        color: Colors.blue,
+                        size: 40,
+                      ),
+                    ),
+                  ],
           ),
         ],
       ),
     );
   }
+
   @override
   void dispose() {
     _positionStream?.cancel();

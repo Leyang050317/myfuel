@@ -11,7 +11,8 @@ class SearchPage extends StatefulWidget {
 
 class _SearchPageState extends State<SearchPage> {
   String _searchQuery = '';
-  String _selectedBrand = 'All'; // Filter option: 'All', 'Petronas', 'Shell', 'Caltex'
+  String _selectedBrand =
+      'All'; // Filter option: 'All', 'Petronas', 'Shell', 'Caltex'
 
   // Complete mock database of stations
   final List<Map<String, dynamic>> _allStations = [
@@ -86,7 +87,7 @@ class _SearchPageState extends State<SearchPage> {
       'diesel': 'RM 3.35',
       'amenities': [Icons.local_atm, Icons.storefront],
       'popular': false,
-    }
+    },
   ];
 
   @override
@@ -95,9 +96,15 @@ class _SearchPageState extends State<SearchPage> {
 
     // Apply filters based on search query and selected brand chip
     final filteredStations = _allStations.where((station) {
-      final matchesSearch = station['name'].toString().toLowerCase().contains(_searchQuery.toLowerCase()) ||
-          station['address'].toString().toLowerCase().contains(_searchQuery.toLowerCase());
-      final matchesBrand = _selectedBrand == 'All' || station['brand'] == _selectedBrand;
+      final matchesSearch =
+          station['name'].toString().toLowerCase().contains(
+            _searchQuery.toLowerCase(),
+          ) ||
+          station['address'].toString().toLowerCase().contains(
+            _searchQuery.toLowerCase(),
+          );
+      final matchesBrand =
+          _selectedBrand == 'All' || station['brand'] == _selectedBrand;
       return matchesSearch && matchesBrand;
     }).toList();
 
@@ -117,7 +124,10 @@ class _SearchPageState extends State<SearchPage> {
           children: [
             // 1. Search Bar Header
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 12.0),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 24.0,
+                vertical: 12.0,
+              ),
               child: TextFormField(
                 onChanged: (val) {
                   setState(() {
@@ -145,7 +155,10 @@ class _SearchPageState extends State<SearchPage> {
             // 2. Horizontal Filter Chips (M3 style)
             SingleChildScrollView(
               scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 4.0),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 24.0,
+                vertical: 4.0,
+              ),
               child: Row(
                 children: ['All', 'Petronas', 'Shell', 'Caltex'].map((brand) {
                   final isSelected = _selectedBrand == brand;
@@ -155,8 +168,12 @@ class _SearchPageState extends State<SearchPage> {
                       selected: isSelected,
                       label: Text(brand),
                       labelStyle: TextStyle(
-                        color: isSelected ? Colors.white : theme.colorScheme.onSurface,
-                        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                        color: isSelected
+                            ? Colors.white
+                            : theme.colorScheme.onSurface,
+                        fontWeight: isSelected
+                            ? FontWeight.bold
+                            : FontWeight.normal,
                       ),
                       selectedColor: AppTheme.primaryColor,
                       checkmarkColor: Colors.white,
@@ -164,7 +181,9 @@ class _SearchPageState extends State<SearchPage> {
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                         side: BorderSide(
-                          color: isSelected ? Colors.transparent : Colors.grey.shade300,
+                          color: isSelected
+                              ? Colors.transparent
+                              : Colors.grey.shade300,
                         ),
                       ),
                       onSelected: (selected) {
@@ -186,23 +205,34 @@ class _SearchPageState extends State<SearchPage> {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.local_gas_station_rounded, size: 64, color: Colors.grey.shade400),
+                          Icon(
+                            Icons.local_gas_station_rounded,
+                            size: 64,
+                            color: Colors.grey.shade400,
+                          ),
                           const SizedBox(height: 16),
                           Text(
                             'No petrol stations found.',
-                            style: theme.textTheme.bodyLarge?.copyWith(color: Colors.grey.shade600),
+                            style: theme.textTheme.bodyLarge?.copyWith(
+                              color: Colors.grey.shade600,
+                            ),
                           ),
                         ],
                       ),
                     )
                   : ListView.builder(
                       physics: const BouncingScrollPhysics(),
-                      padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 8.0),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 24.0,
+                        vertical: 8.0,
+                      ),
                       itemCount: filteredStations.length,
                       itemBuilder: (context, index) {
                         final station = filteredStations[index];
                         final isShell = station['brand'] == 'Shell';
-                        final displayBrandColor = isShell ? Colors.orange.shade800 : station['brandColor'];
+                        final displayBrandColor = isShell
+                            ? Colors.orange.shade800
+                            : station['brandColor'];
 
                         return Card(
                           margin: const EdgeInsets.only(bottom: 16.0),
@@ -216,7 +246,9 @@ class _SearchPageState extends State<SearchPage> {
                                   width: 46,
                                   height: 46,
                                   decoration: BoxDecoration(
-                                    color: station['brandColor'].withOpacity(0.15),
+                                    color: station['brandColor'].withOpacity(
+                                      0.15,
+                                    ),
                                     borderRadius: BorderRadius.circular(10),
                                   ),
                                   child: Icon(
@@ -225,11 +257,12 @@ class _SearchPageState extends State<SearchPage> {
                                   ),
                                 ),
                                 const SizedBox(width: 14),
-                                
+
                                 // Middle information
                                 Expanded(
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Row(
                                         children: [
@@ -258,18 +291,21 @@ class _SearchPageState extends State<SearchPage> {
                                         station['address'],
                                         style: TextStyle(
                                           fontSize: 12,
-                                          color: theme.colorScheme.onSurface.withValues(alpha: 0.55),
+                                          color: theme.colorScheme.onSurface
+                                              .withValues(alpha: 0.55),
                                         ),
                                       ),
                                       const SizedBox(height: 12),
-                                      
+
                                       // Amenities icons row
                                       Row(
                                         children: [
                                           ...List.generate(
                                             station['amenities'].length,
                                             (idx) => Padding(
-                                              padding: const EdgeInsets.only(right: 6.0),
+                                              padding: const EdgeInsets.only(
+                                                right: 6.0,
+                                              ),
                                               child: Icon(
                                                 station['amenities'][idx],
                                                 size: 14,
@@ -281,19 +317,31 @@ class _SearchPageState extends State<SearchPage> {
                                           // Small navigate button
                                           GestureDetector(
                                             onTap: () {
-                                              ScaffoldMessenger.of(context).showSnackBar(
+                                              ScaffoldMessenger.of(
+                                                context,
+                                              ).showSnackBar(
                                                 SnackBar(
-                                                  content: Text('Starting GPS to ${station['name']}'),
-                                                  behavior: SnackBarBehavior.floating,
-                                                  duration: const Duration(seconds: 1),
+                                                  content: Text(
+                                                    'Starting GPS to ${station['name']}',
+                                                  ),
+                                                  behavior:
+                                                      SnackBarBehavior.floating,
+                                                  duration: const Duration(
+                                                    seconds: 1,
+                                                  ),
                                                 ),
                                               );
                                             },
                                             child: Container(
-                                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                    horizontal: 14,
+                                                    vertical: 6,
+                                                  ),
                                               decoration: BoxDecoration(
                                                 color: AppTheme.primaryColor,
-                                                borderRadius: BorderRadius.circular(10),
+                                                borderRadius:
+                                                    BorderRadius.circular(10),
                                               ),
                                               child: const Text(
                                                 'NAVIGATE',
@@ -304,9 +352,9 @@ class _SearchPageState extends State<SearchPage> {
                                                 ),
                                               ),
                                             ),
-                                          )
+                                          ),
                                         ],
-                                      )
+                                      ),
                                     ],
                                   ),
                                 ),

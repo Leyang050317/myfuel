@@ -18,13 +18,10 @@ class PasswordPolicy {
       return false;
     }
 
-    final letterCount =
-        RegExp(r'[A-Za-z]').allMatches(password).length;
+    final letterCount = RegExp(r'[A-Za-z]').allMatches(password).length;
 
-    final digitCount =
-        RegExp(r'\d').allMatches(password).length;
+    final digitCount = RegExp(r'\d').allMatches(password).length;
 
-    return letterCount >= minLetters &&
-        digitCount >= minDigits;
+    return letterCount >= minLetters && digitCount >= minDigits;
   }
 }

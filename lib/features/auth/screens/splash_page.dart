@@ -10,9 +10,10 @@ class SplashPage extends StatefulWidget {
   State<SplashPage> createState() => _SplashPageState();
 }
 
-class _SplashPageState extends State<SplashPage> with SingleTickerProviderStateMixin {
-  late AnimationController _controller;   // 控制 Splash Screen 淡入动画
-  late Animation<double> _fadeAnimation;  // 淡入动画效果
+class _SplashPageState extends State<SplashPage>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller; // 控制 Splash Screen 淡入动画
+  late Animation<double> _fadeAnimation; // 淡入动画效果
 
   /// 初始化动画，并在指定时间后进入登录页面。
   @override
@@ -26,9 +27,10 @@ class _SplashPageState extends State<SplashPage> with SingleTickerProviderStateM
     );
 
     // 建立由透明到完全显示的淡入动画
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeIn),
-    );
+    _fadeAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeIn));
 
     // 开始播放动画
     _controller.forward();
@@ -63,7 +65,8 @@ class _SplashPageState extends State<SplashPage> with SingleTickerProviderStateM
       backgroundColor: theme.colorScheme.primary, // 使用主题主色作为 Splash Screen 背景
       body: SafeArea(
         child: Center(
-          child: FadeTransition(  // 套用淡入动画
+          child: FadeTransition(
+            // 套用淡入动画
             opacity: _fadeAnimation,
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,

@@ -30,34 +30,23 @@ class _FuelTrendPreviewState extends State<FuelTrendPreview> {
 
     return Card(
       elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: InkWell(
         borderRadius: BorderRadius.circular(16),
         onTap: () {
-          Navigator.pushNamed(
-            context,
-            '/fuel-trend',
-          );
+          Navigator.pushNamed(context, '/fuel-trend');
         },
         child: Padding(
           padding: const EdgeInsets.all(20),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-
-                  Text(
-                    "Fuel Price Trend",
-                    style: theme.textTheme.titleMedium,
-                  ),
+                  Text("Fuel Price Trend", style: theme.textTheme.titleMedium),
 
                   const Icon(Icons.arrow_forward_ios_rounded, size: 18),
-
                 ],
               ),
 
@@ -71,16 +60,14 @@ class _FuelTrendPreviewState extends State<FuelTrendPreview> {
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: _controller.history.isEmpty
-                    ? const Center(
-                      child: CircularProgressIndicator(),
-                      )
+                    ? const Center(child: CircularProgressIndicator())
                     : Padding(
                         padding: const EdgeInsets.all(8),
                         child: FuelTrendChart(
                           history: _controller.history,
                           fuelType: "RON95",
+                        ),
                       ),
-                    ),
               ),
 
               const SizedBox(height: 12),

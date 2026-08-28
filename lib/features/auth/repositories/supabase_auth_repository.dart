@@ -91,7 +91,7 @@ class SupabaseAuthRepository implements AuthRepository {
       return UserModel.fromJson(data);
     } on AuthException {
       rethrow;
-    } on PostgrestException{
+    } on PostgrestException {
       rethrow;
     }
   }

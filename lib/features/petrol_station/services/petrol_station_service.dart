@@ -19,7 +19,8 @@ class PetrolStationService {
   Future<List<PetrolStationModel>> loadNearbyStations({
     required LatLng currentLocation,
   }) async {
-    final query = '''
+    final query =
+        '''
 [out:json][timeout:15];
 (
   node["amenity"="fuel"](around:$_radiusMeters,${currentLocation.latitude},${currentLocation.longitude});

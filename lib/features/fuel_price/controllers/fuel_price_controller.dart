@@ -18,7 +18,6 @@ class FuelPriceController {
 
   /// 从 API 读取最新油价及本周变化数据
   Future<void> loadFuelPrice() async {
-
     // 取得最新两笔资料
     final prices = await _service.getLatestFuelPrices();
 

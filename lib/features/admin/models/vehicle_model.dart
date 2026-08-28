@@ -34,9 +34,7 @@ class VehicleModel {
       brand: json['brand'] ?? '',
       model: json['model'] ?? '',
       fuelType: json['fuel_type'] ?? '',
-      fuelEfficiencyKmPerLiter: _toDouble(
-        json['fuel_efficiency_km_per_liter'],
-      ),
+      fuelEfficiencyKmPerLiter: _toDouble(json['fuel_efficiency_km_per_liter']),
       tankCapacityLiters: _toDouble(json['tank_capacity_liters']),
       assignedUserId: json['assigned_user_id'],
       status: json['status'] ?? 'Available',

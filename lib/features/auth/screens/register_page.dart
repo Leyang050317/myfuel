@@ -15,7 +15,7 @@ class RegisterPage extends StatefulWidget {
 /// RegisterPage 的状态管理
 /// 负责输入验证、密码检查及帐号注册流程
 class _RegisterPageState extends State<RegisterPage> {
-  final _formKey = GlobalKey<FormState>();  // 表单验证 Key
+  final _formKey = GlobalKey<FormState>(); // 表单验证 Key
   final _nameController = TextEditingController();
   final _usernameController = TextEditingController();
   final _emailController = TextEditingController();
@@ -47,14 +47,15 @@ class _RegisterPageState extends State<RegisterPage> {
   /// - 至少包含 4 个数字
   bool _isValidPassword(String password) {
     if (password.length < 8) return false;
-    
+
     int letters = 0;
     int digits = 0;
-    
+
     for (int i = 0; i < password.length; i++) {
       final codeUnit = password.codeUnitAt(i);
       // Check if letter: a-z (97-122) or A-Z (65-90)
-      if ((codeUnit >= 97 && codeUnit <= 122) || (codeUnit >= 65 && codeUnit <= 90)) {
+      if ((codeUnit >= 97 && codeUnit <= 122) ||
+          (codeUnit >= 65 && codeUnit <= 90)) {
         letters++;
       }
       // Check if digit: 0-9 (48-57)
@@ -62,7 +63,7 @@ class _RegisterPageState extends State<RegisterPage> {
         digits++;
       }
     }
-    
+
     return letters >= 4 && digits >= 4;
   }
 
@@ -99,8 +100,8 @@ class _RegisterPageState extends State<RegisterPage> {
           title: const Text('Registration Successful'),
           content: const Text(
             'Your account has been created successfully.\n\n'
-                'A verification email has been sent to your email address.\n'
-                'Please verify your email before logging in.',
+            'A verification email has been sent to your email address.\n'
+            'Please verify your email before logging in.',
           ),
           actions: [
             TextButton(
@@ -113,7 +114,7 @@ class _RegisterPageState extends State<RegisterPage> {
           ],
         ),
       );
-    }on AuthException catch (e) {
+    } on AuthException catch (e) {
       if (!mounted) return;
 
       String message = 'Registration failed.';
@@ -132,9 +133,9 @@ class _RegisterPageState extends State<RegisterPage> {
           break;
       }
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(message)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(message)));
     } catch (e, stackTrace) {
       debugPrint('====================================');
       debugPrint('REGISTER ERROR');
@@ -143,13 +144,9 @@ class _RegisterPageState extends State<RegisterPage> {
       debugPrint('====================================');
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-            content: Text(e.toString()),
-            backgroundColor: Colors.red,
-        ),
+        SnackBar(content: Text(e.toString()), backgroundColor: Colors.red),
       );
-    }
-    finally {
+    } finally {
       if (mounted) {
         setState(() {
           _isLoading = false;
@@ -187,14 +184,11 @@ class _RegisterPageState extends State<RegisterPage> {
                   ),
                 ],
               ),
-              
+
               const SizedBox(height: 8),
 
               // 页面标题
-              Text(
-                'Create Account',
-                style: theme.textTheme.titleLarge,
-              ),
+              Text('Create Account', style: theme.textTheme.titleLarge),
               const SizedBox(height: 6),
               Text(
                 'Join MyFuel to navigate petrol stations easily',
@@ -203,7 +197,7 @@ class _RegisterPageState extends State<RegisterPage> {
                   color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
                 ),
               ),
-              
+
               const SizedBox(height: 24),
 
               // 注册表单
@@ -217,7 +211,7 @@ class _RegisterPageState extends State<RegisterPage> {
                     child: Column(
                       children: [
                         const SizedBox(height: 8),
-                        
+
                         // Full Name
                         TextFormField(
                           controller: _nameController,
@@ -353,7 +347,8 @@ class _RegisterPageState extends State<RegisterPage> {
                               ),
                               onPressed: () {
                                 setState(() {
-                                  _obscureConfirmPassword = !_obscureConfirmPassword;
+                                  _obscureConfirmPassword =
+                                      !_obscureConfirmPassword;
                                 });
                               },
                             ),
@@ -377,13 +372,13 @@ class _RegisterPageState extends State<RegisterPage> {
                             onPressed: _isLoading ? null : _handleRegister,
                             child: _isLoading
                                 ? const SizedBox(
-                              height: 20,
-                              width: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: Colors.white,
-                              ),
-                            )
+                                    height: 20,
+                                    width: 20,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: Colors.white,
+                                    ),
+                                  )
                                 : const Text('CREATE ACCOUNT'),
                           ),
                         ),
