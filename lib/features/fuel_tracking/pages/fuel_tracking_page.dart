@@ -53,7 +53,9 @@ class _FuelTrackingPageState extends State<FuelTrackingPage>
   String? _liveTrackingError;
   DateTime? _lastLivePublishAt;
   bool _livePublishInProgress = false;
+  Position? _pendingLivePosition;
   bool _isMapReady = false;
+  bool _isCheckingVehicle = true;
 
   @override
   void initState() {
@@ -66,13 +68,31 @@ class _FuelTrackingPageState extends State<FuelTrackingPage>
     _loadCalculationContext();
   }
 
-  Future<void> _loadCalculationContext() async {
+  Future<bool> _loadCalculationContext() async {
     final userId = Supabase.instance.client.auth.currentUser?.id;
-    if (userId == null) return;
+    if (userId == null) {
+      if (mounted) {
+        setState(() {
+          _calculationVehicle = null;
+          _fuelPrice = null;
+          _calculationError = 'Please sign in before starting a trip.';
+          _isCheckingVehicle = false;
+        });
+      }
+      return false;
+    }
+    if (mounted) setState(() => _isCheckingVehicle = true);
     try {
       final vehicle = await VehicleService().loadAssignedVehicle(userId);
       if (vehicle == null) {
-        throw StateError('No vehicle is assigned to this user.');
+        if (mounted) {
+          setState(() {
+            _calculationVehicle = null;
+            _fuelPrice = null;
+            _calculationError = 'No vehicle is assigned to this user.';
+          });
+        }
+        return false;
       }
       if (!FuelCalculator.supportsFuelType(vehicle.fuelType)) {
         throw UnsupportedError(
@@ -89,8 +109,18 @@ class _FuelTrackingPageState extends State<FuelTrackingPage>
           _calculationError = null;
         });
       }
+      return true;
     } catch (e) {
-      if (mounted) setState(() => _calculationError = e.toString());
+      if (mounted) {
+        setState(() {
+          _calculationVehicle = null;
+          _fuelPrice = null;
+          _calculationError = e.toString();
+        });
+      }
+      return false;
+    } finally {
+      if (mounted) setState(() => _isCheckingVehicle = false);
     }
   }
 
@@ -171,6 +201,9 @@ class _FuelTrackingPageState extends State<FuelTrackingPage>
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
       unawaited(_startPositionStream());
+      if (!_tripService.isTracking) {
+        unawaited(_loadCalculationContext());
+      }
     }
   }
 
@@ -421,41 +454,13 @@ class _FuelTrackingPageState extends State<FuelTrackingPage>
                       remainingDuration: _tripService.remainingDuration,
                       isTracking: _tripService.isTracking,
                       hasDestination: _selectedDestination != null,
+                      hasAssignedVehicle: _calculationVehicle != null,
+                      isCheckingVehicle: _isCheckingVehicle,
 
-                      onStart: () {
-                        _tripService.startTrip();
-                        setState(() {
-                          _followUser = true;
-                        });
-                        final position = _currentPosition;
-                        if (position != null) {
-                          _moveMapToLocation(
-                            LatLng(position.latitude, position.longitude),
-                            16,
-                          );
-                        }
-                        unawaited(
-                          _startPositionStream(enableBackgroundTracking: true),
-                        );
-                        unawaited(
-                          _publishLivePosition(_currentPosition!, force: true),
-                        );
-                      },
+                      onStart: _startTrip,
 
-                      onStop: () {
-                        _tripService.stopTrip();
-                        unawaited(_liveTrackingService.stopPublishing());
-                        unawaited(
-                          _startPositionStream(enableBackgroundTracking: false),
-                        );
-                        _saveTripCalculation();
-                        _searchController.clear();
-                        setState(() {
-                          _plannedRoute = null;
-                          _selectedDestination = null;
-                          _searchResults.clear();
-                        });
-                      },
+                      onStop: _stopTrip,
+                      onRefreshVehicle: _loadCalculationContext,
                     ),
 
                     const Divider(height: 28),
@@ -562,6 +567,51 @@ class _FuelTrackingPageState extends State<FuelTrackingPage>
     _arrivalHandled = false;
   }
 
+  Future<void> _startTrip() async {
+    if (_selectedDestination == null || _currentPosition == null) return;
+
+    final hasVehicle = await _loadCalculationContext();
+    if (!mounted || !hasVehicle || _calculationVehicle == null) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Trip cannot start because no vehicle is assigned to you.',
+            ),
+          ),
+        );
+      }
+      return;
+    }
+
+    _tripService.startTrip();
+    setState(() => _followUser = true);
+    final position = _currentPosition!;
+    _moveMapToLocation(LatLng(position.latitude, position.longitude), 16);
+    unawaited(_startPositionStream(enableBackgroundTracking: true));
+    unawaited(_publishLivePosition(position, force: true));
+  }
+
+  Future<void> _stopTrip() async {
+    _tripService.stopTrip();
+    _searchController.clear();
+    setState(() {
+      _plannedRoute = null;
+      _selectedDestination = null;
+      _searchResults.clear();
+    });
+    unawaited(_startPositionStream(enableBackgroundTracking: false));
+    try {
+      await _liveTrackingService.stopPublishing();
+      if (mounted && _liveTrackingError != null) {
+        setState(() => _liveTrackingError = null);
+      }
+    } catch (error) {
+      if (mounted) setState(() => _liveTrackingError = error.toString());
+    }
+    await _saveTripCalculation();
+  }
+
   Future<void> _saveTripCalculation() async {
     if (_calculationVehicle == null || _fuelPrice == null) return;
     final distance = _tripService.currentTrip?.totalDistanceKm ?? 0;
@@ -587,7 +637,11 @@ class _FuelTrackingPageState extends State<FuelTrackingPage>
     bool force = false,
   }) async {
     final trip = _tripService.currentTrip;
-    if (trip == null || !trip.isTracking || _livePublishInProgress) return;
+    if (trip == null || !trip.isTracking) return;
+    if (_livePublishInProgress) {
+      _pendingLivePosition = position;
+      return;
+    }
 
     final now = DateTime.now();
     if (!force &&
@@ -613,6 +667,11 @@ class _FuelTrackingPageState extends State<FuelTrackingPage>
       if (mounted) setState(() => _liveTrackingError = error.toString());
     } finally {
       _livePublishInProgress = false;
+      final pendingPosition = _pendingLivePosition;
+      _pendingLivePosition = null;
+      if (pendingPosition != null && _tripService.isTracking) {
+        unawaited(_publishLivePosition(pendingPosition, force: true));
+      }
     }
   }
 

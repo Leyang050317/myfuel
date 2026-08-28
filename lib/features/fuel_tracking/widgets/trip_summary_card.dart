@@ -6,8 +6,11 @@ class TripSummaryCard extends StatelessWidget {
   final Duration remainingDuration;
   final bool isTracking;
   final bool hasDestination;
-  final VoidCallback onStart;
-  final VoidCallback onStop;
+  final bool hasAssignedVehicle;
+  final bool isCheckingVehicle;
+  final Future<void> Function() onStart;
+  final Future<void> Function() onStop;
+  final Future<bool> Function() onRefreshVehicle;
 
   const TripSummaryCard({
     super.key,
@@ -17,7 +20,10 @@ class TripSummaryCard extends StatelessWidget {
     required this.isTracking,
     required this.onStart,
     required this.onStop,
+    required this.onRefreshVehicle,
     required this.hasDestination,
+    required this.hasAssignedVehicle,
+    required this.isCheckingVehicle,
   });
 
   @override
@@ -82,14 +88,38 @@ class TripSummaryCard extends StatelessWidget {
 
             child: ElevatedButton(
               onPressed: isTracking
-                  ? onStop
-                  : hasDestination
-                  ? onStart
+                  ? () => onStop()
+                  : hasDestination && hasAssignedVehicle && !isCheckingVehicle
+                  ? () => onStart()
                   : null,
 
-              child: Text(isTracking ? "Stop Trip" : "Start Trip"),
+              child: Text(
+                isTracking
+                    ? "Stop Trip"
+                    : isCheckingVehicle
+                    ? "Checking Vehicle..."
+                    : "Start Trip",
+              ),
             ),
           ),
+          if (!isTracking && !isCheckingVehicle && !hasAssignedVehicle) ...[
+            const SizedBox(height: 10),
+            Text(
+              'A vehicle must be assigned by an admin before you can start a trip.',
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.error,
+                fontSize: 13,
+              ),
+            ),
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton.icon(
+                onPressed: () => onRefreshVehicle(),
+                icon: const Icon(Icons.refresh, size: 18),
+                label: const Text('CHECK AGAIN'),
+              ),
+            ),
+          ],
         ],
       ),
     );

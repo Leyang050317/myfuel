@@ -1,7 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../fuel_tracking/models/fuel_calculation_result.dart';
+import '../../fuel_tracking/models/fuel_claim_model.dart';
 import '../../fuel_tracking/services/fuel_claim_service.dart';
 import '../database/local_database.dart';
 
@@ -15,6 +18,9 @@ class FuelCalculatorPage extends StatefulWidget {
 class _FuelCalculatorPageState extends State<FuelCalculatorPage> {
   List<FuelCalculationResult> _trips = [];
   FuelCalculationResult? _selectedTrip;
+  final FuelClaimService _claimService = FuelClaimService();
+  final Map<String, FuelClaimModel> _claimsByTripId = {};
+  StreamSubscription<List<FuelClaimModel>>? _claimSubscription;
   bool _loading = true;
   bool _submitting = false;
   String? _error;
@@ -24,7 +30,44 @@ class _FuelCalculatorPageState extends State<FuelCalculatorPage> {
   @override
   void initState() {
     super.initState();
+    _watchClaims();
     _loadCompletedTrips();
+  }
+
+  @override
+  void dispose() {
+    _claimSubscription?.cancel();
+    super.dispose();
+  }
+
+  void _watchClaims() {
+    if (_userId.isEmpty) return;
+    _claimSubscription = _claimService
+        .watchClaimsForUser(_userId)
+        .listen(
+          (claims) {
+            if (!mounted) return;
+            setState(() {
+              _claimsByTripId
+                ..clear()
+                ..addEntries(
+                  claims
+                      .where((claim) => claim.tripId != null)
+                      .map((claim) => MapEntry(claim.tripId!, claim)),
+                );
+              final selectedTripId = _selectedTrip?.tripId;
+              if (selectedTripId != null &&
+                  _claimsByTripId.containsKey(selectedTripId)) {
+                _selectedTrip = null;
+              }
+            });
+          },
+          onError: (Object error) {
+            if (mounted) {
+              setState(() => _error = 'Unable to sync claims: $error');
+            }
+          },
+        );
   }
 
   Future<void> _loadCompletedTrips() async {
@@ -59,7 +102,9 @@ class _FuelCalculatorPageState extends State<FuelCalculatorPage> {
     if (_selectedTrip == null) return;
     setState(() => _submitting = true);
     try {
-      await FuelClaimService().submit(_selectedTrip!);
+      final tripId = _selectedTrip!.tripId;
+      if (tripId == null || _claimsByTripId.containsKey(tripId)) return;
+      await _claimService.submit(_selectedTrip!);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -72,9 +117,9 @@ class _FuelCalculatorPageState extends State<FuelCalculatorPage> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Failed to submit claim: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to submit claim: $e')));
       }
     } finally {
       if (mounted) {
@@ -163,17 +208,23 @@ class _FuelCalculatorPageState extends State<FuelCalculatorPage> {
                 else
                   ..._trips.map((trip) {
                     final isSelected = _selectedTrip == trip;
+                    final claim = trip.tripId == null
+                        ? null
+                        : _claimsByTripId[trip.tripId!];
+                    final hasClaim = claim != null;
                     final dateStr =
                         '${trip.createdAt.day.toString().padLeft(2, '0')}/${trip.createdAt.month.toString().padLeft(2, '0')}/${trip.createdAt.year} ${trip.createdAt.hour.toString().padLeft(2, '0')}:${trip.createdAt.minute.toString().padLeft(2, '0')}';
 
                     return Padding(
                       padding: const EdgeInsets.only(bottom: 12),
                       child: InkWell(
-                        onTap: () {
-                          setState(() {
-                            _selectedTrip = isSelected ? null : trip;
-                          });
-                        },
+                        onTap: hasClaim
+                            ? null
+                            : () {
+                                setState(() {
+                                  _selectedTrip = isSelected ? null : trip;
+                                });
+                              },
                         borderRadius: BorderRadius.circular(16),
                         child: Container(
                           padding: const EdgeInsets.all(16),
@@ -214,6 +265,11 @@ class _FuelCalculatorPageState extends State<FuelCalculatorPage> {
                                           ),
                                     ),
                                   ),
+                                  if (claim != null) ...[
+                                    const SizedBox(width: 8),
+                                    _claimStatusChip(claim.status),
+                                  ],
+                                  const SizedBox(width: 8),
                                   Text(
                                     'RM ${trip.fuelCost.toStringAsFixed(2)}',
                                     style: theme.textTheme.titleMedium
@@ -271,6 +327,20 @@ class _FuelCalculatorPageState extends State<FuelCalculatorPage> {
                                   ),
                                 ],
                               ),
+                              if (claim != null) ...[
+                                const SizedBox(height: 10),
+                                Text(
+                                  claim.status == 'Pending'
+                                      ? 'This claim is waiting for admin review.'
+                                      : claim.status == 'Approved'
+                                      ? 'This fuel claim has been approved.'
+                                      : 'This fuel claim was rejected${claim.rejectionReason?.isNotEmpty == true ? ': ${claim.rejectionReason}' : '.'}',
+                                  style: TextStyle(
+                                    color: _claimStatusColor(claim.status),
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
                             ],
                           ),
                         ),
@@ -309,10 +379,7 @@ class _FuelCalculatorPageState extends State<FuelCalculatorPage> {
                             'Vehicle',
                             _selectedTrip!.vehicleDisplayName,
                           ),
-                          _reviewRow(
-                            'Fuel Type',
-                            _selectedTrip!.fuelType,
-                          ),
+                          _reviewRow('Fuel Type', _selectedTrip!.fuelType),
                           _reviewRow(
                             'Efficiency',
                             '${_selectedTrip!.fuelEfficiencyKmPerLiter.toStringAsFixed(2)} km/L',
@@ -363,25 +430,18 @@ class _FuelCalculatorPageState extends State<FuelCalculatorPage> {
   }
 
   Widget _infoItem(String label, String value) => Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            label,
-            style: const TextStyle(fontSize: 11, color: Colors.grey),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            value,
-            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
-          ),
-        ],
-      );
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Text(label, style: const TextStyle(fontSize: 11, color: Colors.grey)),
+      const SizedBox(height: 2),
+      Text(
+        value,
+        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+      ),
+    ],
+  );
 
-  Widget _reviewRow(
-    String label,
-    String value, {
-    bool isHighlight = false,
-  }) =>
+  Widget _reviewRow(String label, String value, {bool isHighlight = false}) =>
       Padding(
         padding: const EdgeInsets.symmetric(vertical: 4),
         child: Row(
@@ -407,4 +467,26 @@ class _FuelCalculatorPageState extends State<FuelCalculatorPage> {
           ],
         ),
       );
+
+  Widget _claimStatusChip(String status) => Container(
+    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+    decoration: BoxDecoration(
+      color: _claimStatusColor(status).withValues(alpha: 0.12),
+      borderRadius: BorderRadius.circular(20),
+    ),
+    child: Text(
+      status,
+      style: TextStyle(
+        color: _claimStatusColor(status),
+        fontSize: 11,
+        fontWeight: FontWeight.bold,
+      ),
+    ),
+  );
+
+  Color _claimStatusColor(String status) => switch (status) {
+    'Approved' => Colors.green.shade700,
+    'Rejected' => Colors.red.shade700,
+    _ => Colors.orange.shade800,
+  };
 }

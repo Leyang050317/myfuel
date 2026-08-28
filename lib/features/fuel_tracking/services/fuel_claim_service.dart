@@ -7,6 +7,9 @@ class FuelClaimService {
   SupabaseClient get _supabase => Supabase.instance.client;
   Future<void> submit(FuelCalculationResult result, {String? tripId}) async {
     final effectiveTripId = tripId ?? result.tripId;
+    if (effectiveTripId == null || effectiveTripId.isEmpty) {
+      throw StateError('A completed trip is required for a fuel claim.');
+    }
     await _supabase.from('fuel_claims').insert({
       'user_id': result.userId,
       'vehicle_id': result.vehicleId,
@@ -22,6 +25,19 @@ class FuelClaimService {
       'emission_factor': result.emissionFactor,
       'status': 'Pending',
     });
+  }
+
+  Stream<List<FuelClaimModel>> watchClaimsForUser(String userId) {
+    return _supabase
+        .from('fuel_claims')
+        .stream(primaryKey: ['id'])
+        .eq('user_id', userId)
+        .order('created_at', ascending: false)
+        .map(
+          (rows) => rows
+              .map((row) => FuelClaimModel.fromJson(row))
+              .toList(growable: false),
+        );
   }
 
   Future<List<FuelClaimModel>> loadClaims({String? userId}) async {

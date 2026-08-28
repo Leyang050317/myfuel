@@ -8,6 +8,7 @@ import 'package:latlong2/latlong.dart';
 import '../../../core/services/location_service.dart';
 import '../../fuel_tracking/models/route_model.dart';
 import '../../fuel_tracking/services/route_service.dart';
+import '../../fuel_tracking/widgets/trip_bottom_sheet.dart';
 import '../models/petrol_station_model.dart';
 import '../services/petrol_station_service.dart';
 
@@ -126,10 +127,12 @@ class _MapPageState extends State<MapPage> {
   void _fitRouteAfterRender(RouteModel route) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
+      final isLandscape =
+          MediaQuery.orientationOf(context) == Orientation.landscape;
       _mapController.fitCamera(
         CameraFit.bounds(
           bounds: LatLngBounds.fromPoints(route.polyline),
-          padding: const EdgeInsets.fromLTRB(60, 80, 60, 260),
+          padding: EdgeInsets.fromLTRB(60, 70, 60, isLandscape ? 90 : 220),
         ),
       );
     });
@@ -213,9 +216,9 @@ class _MapPageState extends State<MapPage> {
       setState(() {
         _isLoadingRoute = false;
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Unable to load route: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Unable to load route: $e')));
     }
   }
 
@@ -288,33 +291,31 @@ class _MapPageState extends State<MapPage> {
                     ),
                   ),
                 ),
-                ..._stations.map(
-                  (station) {
-                    final selected = station.id == _selectedStation?.id;
-                    final color = _brandColor(station.brand);
+                ..._stations.map((station) {
+                  final selected = station.id == _selectedStation?.id;
+                  final color = _brandColor(station.brand);
 
-                    return Marker(
-                      point: station.location,
-                      width: selected ? 66 : 56,
-                      height: selected ? 66 : 56,
-                      child: GestureDetector(
-                        onTap: () => _showStation(station),
-                        child: Icon(
-                          Icons.local_gas_station_rounded,
-                          color: color,
-                          size: selected ? 46 : 38,
-                          shadows: const [
-                            Shadow(
-                              color: Colors.black26,
-                              blurRadius: 6,
-                              offset: Offset(0, 2),
-                            ),
-                          ],
-                        ),
+                  return Marker(
+                    point: station.location,
+                    width: selected ? 66 : 56,
+                    height: selected ? 66 : 56,
+                    child: GestureDetector(
+                      onTap: () => _showStation(station),
+                      child: Icon(
+                        Icons.local_gas_station_rounded,
+                        color: color,
+                        size: selected ? 46 : 38,
+                        shadows: const [
+                          Shadow(
+                            color: Colors.black26,
+                            blurRadius: 6,
+                            offset: Offset(0, 2),
+                          ),
+                        ],
                       ),
-                    );
-                  },
-                ),
+                    ),
+                  );
+                }),
               ],
             ),
           ],
@@ -349,17 +350,17 @@ class _MapPageState extends State<MapPage> {
             ),
           ),
         if (_selectedStation != null)
-          Positioned(
-            left: 16,
-            right: 16,
-            bottom: 20,
-            child: _StationBottomSheet(
-              station: _selectedStation!,
-              distanceKm: _distanceToStation(_selectedStation!),
-              route: _routeStationId == _selectedStation!.id ? _route : null,
-              brandColor: _brandColor(_selectedStation!.brand),
-              isLoadingRoute: _isLoadingRoute,
-              onNavigate: () => _navigateToStation(_selectedStation!),
+          Align(
+            alignment: Alignment.bottomCenter,
+            child: TripBottomSheet(
+              child: _StationBottomSheet(
+                station: _selectedStation!,
+                distanceKm: _distanceToStation(_selectedStation!),
+                route: _routeStationId == _selectedStation!.id ? _route : null,
+                brandColor: _brandColor(_selectedStation!.brand),
+                isLoadingRoute: _isLoadingRoute,
+                onNavigate: () => _navigateToStation(_selectedStation!),
+              ),
             ),
           ),
       ],
@@ -388,95 +389,88 @@ class _StationBottomSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return Card(
-      margin: EdgeInsets.zero,
-      elevation: 8,
-      child: Padding(
-        padding: const EdgeInsets.all(18),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                CircleAvatar(
-                  backgroundColor: brandColor.withValues(alpha: 0.12),
-                  foregroundColor: brandColor,
-                  child: const Icon(Icons.local_gas_station_rounded),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        station.name,
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              CircleAvatar(
+                backgroundColor: brandColor.withValues(alpha: 0.12),
+                foregroundColor: brandColor,
+                child: const Icon(Icons.local_gas_station_rounded),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      station.name,
+                      style: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
                       ),
-                      const SizedBox(height: 2),
-                      Text(
-                        station.brand,
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          color: brandColor,
-                          fontWeight: FontWeight.w700,
-                        ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      station.brand,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: brandColor,
+                        fontWeight: FontWeight.w700,
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
-                Text(
-                  '${distanceKm.toStringAsFixed(1)} km',
-                  style: theme.textTheme.bodyLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+              ),
+              Text(
+                '${distanceKm.toStringAsFixed(1)} km',
+                style: theme.textTheme.bodyLarge?.copyWith(
+                  fontWeight: FontWeight.bold,
                 ),
-              ],
-            ),
-            const SizedBox(height: 14),
-            _InfoLine(
-              icon: Icons.place_outlined,
-              text: station.address,
-            ),
-            if (route != null) ...[
-              const SizedBox(height: 10),
-              _InfoLine(
-                icon: Icons.route_outlined,
-                text:
-                    '${route!.distanceKm.toStringAsFixed(1)} km route - ${route!.duration.inMinutes} min ETA',
               ),
             ],
-            const SizedBox(height: 12),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: station.availableFuelTypes
-                  .map(
-                    (fuelType) => Chip(
-                      label: Text(fuelType),
-                      visualDensity: VisualDensity.compact,
-                    ),
-                  )
-                  .toList(),
-            ),
-            const SizedBox(height: 14),
-            ElevatedButton.icon(
-              onPressed: isLoadingRoute ? null : onNavigate,
-              icon: isLoadingRoute
-                  ? const SizedBox(
-                      width: 18,
-                      height: 18,
-                      child: CircularProgressIndicator(
-                        color: Colors.white,
-                        strokeWidth: 2,
-                      ),
-                    )
-                  : const Icon(Icons.directions_rounded),
-              label: Text(isLoadingRoute ? 'LOADING ROUTE' : 'NAVIGATE'),
+          ),
+          const SizedBox(height: 14),
+          _InfoLine(icon: Icons.place_outlined, text: station.address),
+          if (route != null) ...[
+            const SizedBox(height: 10),
+            _InfoLine(
+              icon: Icons.route_outlined,
+              text:
+                  '${route!.distanceKm.toStringAsFixed(1)} km route - ${route!.duration.inMinutes} min ETA',
             ),
           ],
-        ),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: station.availableFuelTypes
+                .map(
+                  (fuelType) => Chip(
+                    label: Text(fuelType),
+                    visualDensity: VisualDensity.compact,
+                  ),
+                )
+                .toList(),
+          ),
+          const SizedBox(height: 14),
+          ElevatedButton.icon(
+            onPressed: isLoadingRoute ? null : onNavigate,
+            icon: isLoadingRoute
+                ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(
+                      color: Colors.white,
+                      strokeWidth: 2,
+                    ),
+                  )
+                : const Icon(Icons.directions_rounded),
+            label: Text(isLoadingRoute ? 'LOADING ROUTE' : 'NAVIGATE'),
+          ),
+        ],
       ),
     );
   }
@@ -486,10 +480,7 @@ class _InfoLine extends StatelessWidget {
   final IconData icon;
   final String text;
 
-  const _InfoLine({
-    required this.icon,
-    required this.text,
-  });
+  const _InfoLine({required this.icon, required this.text});
 
   @override
   Widget build(BuildContext context) {
@@ -504,12 +495,7 @@ class _InfoLine extends StatelessWidget {
           color: theme.colorScheme.onSurface.withValues(alpha: 0.56),
         ),
         const SizedBox(width: 8),
-        Expanded(
-          child: Text(
-            text,
-            style: theme.textTheme.bodyMedium,
-          ),
-        ),
+        Expanded(child: Text(text, style: theme.textTheme.bodyMedium)),
       ],
     );
   }

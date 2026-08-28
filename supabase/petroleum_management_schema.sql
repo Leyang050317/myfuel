@@ -19,6 +19,9 @@ create table if not exists public.fuel_claims (
 );
 create index if not exists fuel_claims_user_created_idx on public.fuel_claims (user_id, created_at desc);
 create index if not exists fuel_claims_status_created_idx on public.fuel_claims (status, created_at desc);
+create unique index if not exists fuel_claims_one_per_trip_idx
+  on public.fuel_claims (user_id, trip_id)
+  where trip_id is not null;
 
 create table if not exists public.refuel_records (
   id uuid primary key default gen_random_uuid(),

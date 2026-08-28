@@ -13,12 +13,22 @@ class LiveTrackingService {
   static const _table = 'driver_live_locations';
   String? _cachedDriverName;
 
-  Stream<List<Map<String, dynamic>>> watchActiveDrivers() {
+  /// Listen to every row and filter `is_active` in the UI.
+  ///
+  /// Supabase's filtered `stream()` does not remove a cached row when an
+  /// UPDATE makes that row stop matching the filter.
+  Stream<List<Map<String, dynamic>>> watchDriverLocations() {
     return _client
         .from(_table)
         .stream(primaryKey: ['user_id'])
-        .eq('is_active', true)
         .order('updated_at');
+  }
+
+  Future<List<Map<String, dynamic>>> loadDriverLocations() async {
+    final rows = await _client.from(_table).select().order('updated_at');
+    return (rows as List<dynamic>)
+        .map((row) => row as Map<String, dynamic>)
+        .toList(growable: false);
   }
 
   Future<void> publishPosition({

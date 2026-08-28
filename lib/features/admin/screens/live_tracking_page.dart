@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
@@ -30,35 +31,69 @@ class _LiveTrackingPageState extends State<LiveTrackingPage> {
   final Map<String, List<LatLng>> _trails = {};
   final Map<String, String> _tripIds = {};
   StreamSubscription<List<Map<String, dynamic>>>? _subscription;
+  Timer? _refreshTimer;
   List<LiveDriverModel> _drivers = [];
   String? _error;
   bool _mapReady = false;
   bool _hasFittedDrivers = false;
+  bool _refreshInProgress = false;
+  String? _followedDriverId;
 
   @override
   void initState() {
     super.initState();
-    _subscription = _service.watchActiveDrivers().listen(
+    _subscription = _service.watchDriverLocations().listen(
       _handleLocations,
       onError: (Object error) {
         if (mounted) setState(() => _error = error.toString());
       },
+    );
+    _refreshTimer = Timer.periodic(
+      const Duration(seconds: 3),
+      (_) => _refreshLocations(),
     );
   }
 
   @override
   void dispose() {
     _subscription?.cancel();
+    _refreshTimer?.cancel();
     super.dispose();
+  }
+
+  Future<void> _refreshLocations() async {
+    if (_refreshInProgress) return;
+    _refreshInProgress = true;
+    try {
+      _handleLocations(await _service.loadDriverLocations());
+    } catch (error) {
+      if (mounted && _drivers.isEmpty) {
+        setState(() => _error = error.toString());
+      }
+    } finally {
+      _refreshInProgress = false;
+    }
   }
 
   void _handleLocations(List<Map<String, dynamic>> rows) {
     if (!mounted) return;
     final cutoff = DateTime.now().toUtc().subtract(const Duration(minutes: 2));
     final drivers = rows
+        .where((row) => row['is_active'] == true)
         .map(LiveDriverModel.fromJson)
         .where((driver) => driver.updatedAt.toUtc().isAfter(cutoff))
         .toList();
+
+    final activeUserIds = drivers.map((driver) => driver.userId).toSet();
+    _trails.removeWhere((userId, _) => !activeUserIds.contains(userId));
+    _tripIds.removeWhere((userId, _) => !activeUserIds.contains(userId));
+    if (_followedDriverId != null &&
+        !activeUserIds.contains(_followedDriverId)) {
+      _followedDriverId = null;
+    }
+    if (drivers.length == 1) {
+      _followedDriverId = drivers.first.userId;
+    }
 
     for (final driver in drivers) {
       if (_tripIds[driver.userId] != driver.tripId) {
@@ -77,9 +112,24 @@ class _LiveTrackingPageState extends State<LiveTrackingPage> {
     setState(() {
       _drivers = drivers;
       _error = null;
+      if (drivers.isEmpty) _hasFittedDrivers = false;
     });
     if (!_hasFittedDrivers && drivers.isNotEmpty) {
       WidgetsBinding.instance.addPostFrameCallback((_) => _fitAllDrivers());
+    } else if (_followedDriverId != null && _mapReady) {
+      final followed = drivers.where(
+        (driver) => driver.userId == _followedDriverId,
+      );
+      if (followed.isNotEmpty) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted && _mapReady) {
+            _mapController.move(
+              followed.first.location,
+              _mapController.camera.zoom,
+            );
+          }
+        });
+      }
     }
   }
 
@@ -98,6 +148,12 @@ class _LiveTrackingPageState extends State<LiveTrackingPage> {
       );
     }
     _hasFittedDrivers = true;
+    if (_drivers.length != 1) _followedDriverId = null;
+  }
+
+  void _followDriver(LiveDriverModel driver) {
+    setState(() => _followedDriverId = driver.userId);
+    _mapController.move(driver.location, 17);
   }
 
   Color _driverColor(String userId) {
@@ -177,7 +233,10 @@ class _LiveTrackingPageState extends State<LiveTrackingPage> {
                           width: 130,
                           height: 72,
                           child: GestureDetector(
-                            onTap: () => _showDriver(driver),
+                            onTap: () {
+                              _followDriver(driver);
+                              _showDriver(driver);
+                            },
                             child: Column(
                               children: [
                                 Container(
@@ -205,7 +264,32 @@ class _LiveTrackingPageState extends State<LiveTrackingPage> {
                                     ),
                                   ),
                                 ),
-                                Icon(Icons.navigation, color: color, size: 34),
+                                Transform.rotate(
+                                  angle: driver.heading * math.pi / 180,
+                                  child: Container(
+                                    width: 38,
+                                    height: 38,
+                                    decoration: BoxDecoration(
+                                      color: color,
+                                      shape: BoxShape.circle,
+                                      border: Border.all(
+                                        color: Colors.white,
+                                        width: 2,
+                                      ),
+                                      boxShadow: const [
+                                        BoxShadow(
+                                          blurRadius: 5,
+                                          color: Colors.black38,
+                                        ),
+                                      ],
+                                    ),
+                                    child: const Icon(
+                                      Icons.directions_car_filled,
+                                      color: Colors.white,
+                                      size: 23,
+                                    ),
+                                  ),
+                                ),
                               ],
                             ),
                           ),
@@ -263,7 +347,7 @@ class _LiveTrackingPageState extends State<LiveTrackingPage> {
                             textAlign: TextAlign.right,
                           ),
                           onTap: () {
-                            _mapController.move(driver.location, 17);
+                            _followDriver(driver);
                             _showDriver(driver);
                           },
                         ),
