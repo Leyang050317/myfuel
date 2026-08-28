@@ -64,7 +64,7 @@ class FuelClaimService {
     if (!const {'Approved', 'Rejected'}.contains(status)) {
       throw ArgumentError('Invalid claim status.');
     }
-    await _supabase
+    final updated = await _supabase
         .from('fuel_claims')
         .update({
           'status': status,
@@ -72,6 +72,13 @@ class FuelClaimService {
           'updated_at': DateTime.now().toIso8601String(),
         })
         .eq('id', id)
-        .eq('status', 'Pending');
+        .eq('status', 'Pending')
+        .select('id, status')
+        .maybeSingle();
+    if (updated == null) {
+      throw StateError(
+        'This claim is no longer pending. Refresh and try again.',
+      );
+    }
   }
 }

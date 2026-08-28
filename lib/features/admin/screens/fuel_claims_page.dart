@@ -11,6 +11,7 @@ class FuelClaimsPage extends StatefulWidget {
 class _FuelClaimsPageState extends State<FuelClaimsPage> {
   final _service = FuelClaimService();
   List<FuelClaimModel> _claims = [];
+  final Set<String> _updatingClaimIds = {};
   bool _loading = true;
   @override
   void initState() {
@@ -34,42 +35,32 @@ class _FuelClaimsPageState extends State<FuelClaimsPage> {
   Future<void> _update(FuelClaimModel claim, String status) async {
     String? reason;
     if (status == 'Rejected') {
-      final controller = TextEditingController();
-      await showDialog<void>(
+      reason = await showDialog<String>(
         context: context,
-        builder: (context) => AlertDialog(
-          title: const Text('Reject Claim'),
-          content: TextField(
-            controller: controller,
-            decoration: const InputDecoration(labelText: 'Reason (optional)'),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel'),
-            ),
-            FilledButton(
-              onPressed: () {
-                reason = controller.text.trim();
-                Navigator.pop(context);
-              },
-              child: const Text('Reject'),
-            ),
-          ],
-        ),
+        builder: (_) => const _RejectClaimDialog(),
       );
-      controller.dispose();
       if (reason == null) return;
     }
+    if (!mounted || _updatingClaimIds.contains(claim.id)) return;
+    setState(() => _updatingClaimIds.add(claim.id));
     try {
       await _service.updateStatus(claim.id, status, rejectionReason: reason);
       await _load();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Claim ${status.toLowerCase()} successfully.'),
+          ),
+        );
+      }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text('Unable to update claim: $e')));
       }
+    } finally {
+      if (mounted) setState(() => _updatingClaimIds.remove(claim.id));
     }
   }
 
@@ -86,6 +77,7 @@ class _FuelClaimsPageState extends State<FuelClaimsPage> {
             separatorBuilder: (_, _) => const SizedBox(height: 12),
             itemBuilder: (context, index) {
               final claim = _claims[index];
+              final isUpdating = _updatingClaimIds.contains(claim.id);
               return Card(
                 child: Padding(
                   padding: const EdgeInsets.all(16),
@@ -108,11 +100,17 @@ class _FuelClaimsPageState extends State<FuelClaimsPage> {
                         Row(
                           children: [
                             TextButton(
-                              onPressed: () => _update(claim, 'Approved'),
-                              child: const Text('APPROVE'),
+                              onPressed: isUpdating
+                                  ? null
+                                  : () => _update(claim, 'Approved'),
+                              child: Text(
+                                isUpdating ? 'UPDATING...' : 'APPROVE',
+                              ),
                             ),
                             TextButton(
-                              onPressed: () => _update(claim, 'Rejected'),
+                              onPressed: isUpdating
+                                  ? null
+                                  : () => _update(claim, 'Rejected'),
                               child: const Text('REJECT'),
                             ),
                           ],
@@ -126,4 +124,46 @@ class _FuelClaimsPageState extends State<FuelClaimsPage> {
             },
           ),
   );
+}
+
+class _RejectClaimDialog extends StatefulWidget {
+  const _RejectClaimDialog();
+
+  @override
+  State<_RejectClaimDialog> createState() => _RejectClaimDialogState();
+}
+
+class _RejectClaimDialogState extends State<_RejectClaimDialog> {
+  final _reasonController = TextEditingController();
+
+  @override
+  void dispose() {
+    _reasonController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Reject Claim'),
+      content: TextField(
+        controller: _reasonController,
+        autofocus: true,
+        maxLines: 3,
+        minLines: 1,
+        decoration: const InputDecoration(labelText: 'Reason (optional)'),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Cancel'),
+        ),
+        FilledButton(
+          onPressed: () =>
+              Navigator.of(context).pop(_reasonController.text.trim()),
+          child: const Text('Reject'),
+        ),
+      ],
+    );
+  }
 }
