@@ -21,6 +21,7 @@ class _FuelCalculatorPageState extends State<FuelCalculatorPage> {
   final FuelClaimService _claimService = FuelClaimService();
   final Map<String, FuelClaimModel> _claimsByTripId = {};
   StreamSubscription<List<FuelClaimModel>>? _claimSubscription;
+  Timer? _claimRefreshTimer;
   bool _loading = true;
   bool _submitting = false;
   String? _error;
@@ -30,13 +31,19 @@ class _FuelCalculatorPageState extends State<FuelCalculatorPage> {
   @override
   void initState() {
     super.initState();
+    unawaited(_loadClaimsFromServer());
     _watchClaims();
+    _claimRefreshTimer = Timer.periodic(
+      const Duration(seconds: 5),
+      (_) => _loadClaimsFromServer(),
+    );
     _loadCompletedTrips();
   }
 
   @override
   void dispose() {
     _claimSubscription?.cancel();
+    _claimRefreshTimer?.cancel();
     super.dispose();
   }
 
@@ -46,28 +53,45 @@ class _FuelCalculatorPageState extends State<FuelCalculatorPage> {
         .watchClaimsForUser(_userId)
         .listen(
           (claims) {
-            if (!mounted) return;
-            setState(() {
-              _claimsByTripId
-                ..clear()
-                ..addEntries(
-                  claims
-                      .where((claim) => claim.tripId != null)
-                      .map((claim) => MapEntry(claim.tripId!, claim)),
-                );
-              final selectedTripId = _selectedTrip?.tripId;
-              if (selectedTripId != null &&
-                  _claimsByTripId.containsKey(selectedTripId)) {
-                _selectedTrip = null;
-              }
-            });
+            _applyClaims(claims);
           },
-          onError: (Object error) {
-            if (mounted) {
-              setState(() => _error = 'Unable to sync claims: $error');
-            }
+          onError: (Object _) {
+            // Realtime may not be enabled for fuel_claims. REST polling keeps
+            // claim statuses synchronized without showing a fatal UI error.
+            unawaited(_loadClaimsFromServer());
           },
         );
+  }
+
+  Future<void> _loadClaimsFromServer() async {
+    if (_userId.isEmpty) return;
+    try {
+      _applyClaims(await _claimService.loadClaims(userId: _userId));
+    } catch (_) {
+      // A temporary network failure must not hide locally completed trips.
+    }
+  }
+
+  void _applyClaims(List<FuelClaimModel> claims) {
+    if (!mounted) return;
+    setState(() {
+      _claimsByTripId
+        ..clear()
+        ..addEntries(
+          claims
+              .where((claim) => claim.tripId != null)
+              .map((claim) => MapEntry(claim.tripId!, claim)),
+        );
+      final selectedTripId = _selectedTrip?.tripId;
+      if (selectedTripId != null &&
+          _claimsByTripId.containsKey(selectedTripId)) {
+        _selectedTrip = null;
+      }
+    });
+  }
+
+  Future<void> _refreshAll() async {
+    await Future.wait([_loadCompletedTrips(), _loadClaimsFromServer()]);
   }
 
   Future<void> _loadCompletedTrips() async {
@@ -100,16 +124,18 @@ class _FuelCalculatorPageState extends State<FuelCalculatorPage> {
 
   Future<void> _submitClaim() async {
     if (_selectedTrip == null) return;
+    final selectedTrip = _selectedTrip!;
     setState(() => _submitting = true);
     try {
-      final tripId = _selectedTrip!.tripId;
+      final tripId = selectedTrip.tripId;
       if (tripId == null || _claimsByTripId.containsKey(tripId)) return;
-      await _claimService.submit(_selectedTrip!);
+      await _claimService.submit(selectedTrip);
+      await _loadClaimsFromServer();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              'Fuel claim of RM ${_selectedTrip!.fuelCost.toStringAsFixed(2)} submitted as Pending.',
+              'Fuel claim of RM ${selectedTrip.fuelCost.toStringAsFixed(2)} submitted as Pending.',
             ),
           ),
         );
@@ -139,7 +165,7 @@ class _FuelCalculatorPageState extends State<FuelCalculatorPage> {
           IconButton(
             icon: const Icon(Icons.refresh),
             tooltip: 'Refresh Trips',
-            onPressed: _loading ? null : _loadCompletedTrips,
+            onPressed: _loading ? null : _refreshAll,
           ),
         ],
       ),

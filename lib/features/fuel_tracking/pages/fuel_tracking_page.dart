@@ -41,7 +41,10 @@ class _FuelTrackingPageState extends State<FuelTrackingPage>
   final TextEditingController _searchController = TextEditingController();
 
   StreamSubscription<Position>? _positionStream;
+  Timer? _gpsWatchdog;
   Position? _currentPosition;
+  DateTime? _lastPositionReceivedAt;
+  bool _positionPollInProgress = false;
   final Distance _distance = const Distance();
   DestinationModel? _selectedDestination;
   RouteModel? _plannedRoute;
@@ -128,6 +131,7 @@ class _FuelTrackingPageState extends State<FuelTrackingPage>
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _positionStream?.cancel();
+    _gpsWatchdog?.cancel();
     _searchDebounce?.cancel();
     _searchController.dispose();
     super.dispose();
@@ -141,12 +145,37 @@ class _FuelTrackingPageState extends State<FuelTrackingPage>
     final current = await _locationService.getCurrentLocation();
     if (!mounted) return;
 
-    setState(() {
-      _currentPosition = current;
-    });
-    _moveMapToLocation(LatLng(current.latitude, current.longitude), 16);
+    _handlePosition(current);
+    _startGpsWatchdog();
 
     await _startPositionStream();
+  }
+
+  void _startGpsWatchdog() {
+    _gpsWatchdog?.cancel();
+    _gpsWatchdog = Timer.periodic(
+      const Duration(seconds: 3),
+      (_) => _pollPositionIfStreamIsStale(),
+    );
+  }
+
+  Future<void> _pollPositionIfStreamIsStale() async {
+    if (!mounted || _positionPollInProgress) return;
+    final lastUpdate = _lastPositionReceivedAt;
+    if (lastUpdate != null &&
+        DateTime.now().difference(lastUpdate) < const Duration(seconds: 5)) {
+      return;
+    }
+
+    _positionPollInProgress = true;
+    try {
+      _handlePosition(await _locationService.getCurrentLocation());
+    } catch (_) {
+      // The position stream error handler already informs the user. Keep the
+      // watchdog alive so it can recover automatically when GPS returns.
+    } finally {
+      _positionPollInProgress = false;
+    }
   }
 
   Future<void> _startPositionStream({bool? enableBackgroundTracking}) async {
@@ -159,42 +188,42 @@ class _FuelTrackingPageState extends State<FuelTrackingPage>
               enableBackgroundTracking ?? _tripService.isTracking,
         )
         .listen(
-          (position) {
-            if (!mounted) return;
-            setState(() {
-              _currentPosition = position;
-            });
-            final location = LatLng(position.latitude, position.longitude);
-            if (_followUser || !_hasCenteredOnUser || _tripService.isTracking) {
-              _moveMapToLocation(location, _hasCenteredOnUser ? null : 16);
-            }
-
-            if (_tripService.isTracking) {
-              _tripService.updateLocation(location);
-              unawaited(_publishLivePosition(position));
-
-              if (_selectedDestination != null) {
-                final distance = Geolocator.distanceBetween(
-                  position.latitude,
-                  position.longitude,
-
-                  _selectedDestination!.location.latitude,
-                  _selectedDestination!.location.longitude,
-                );
-
-                if (distance <= 30) {
-                  _onArrival();
-                }
-              }
-            }
-          },
+          _handlePosition,
           onError: (Object error) {
             if (!mounted) return;
+            _lastPositionReceivedAt = null;
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(content: Text('Live location tracking stopped: $error')),
             );
           },
         );
+  }
+
+  void _handlePosition(Position position) {
+    if (!mounted) return;
+    _lastPositionReceivedAt = DateTime.now();
+    setState(() => _currentPosition = position);
+
+    final location = LatLng(position.latitude, position.longitude);
+    if (_followUser || !_hasCenteredOnUser || _tripService.isTracking) {
+      _moveMapToLocation(location, _hasCenteredOnUser ? null : 16);
+    }
+
+    if (!_tripService.isTracking) return;
+    _tripService.updateLocation(location);
+    unawaited(_publishLivePosition(position));
+
+    final destination = _selectedDestination;
+    if (destination == null) return;
+    final distance = Geolocator.distanceBetween(
+      position.latitude,
+      position.longitude,
+      destination.location.latitude,
+      destination.location.longitude,
+    );
+    if (distance <= 30) {
+      unawaited(_onArrival());
+    }
   }
 
   @override

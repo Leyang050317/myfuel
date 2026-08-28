@@ -30,7 +30,10 @@ class LocationService {
   /// Get current GPS location once
   Future<Position> getCurrentLocation() async {
     return await Geolocator.getCurrentPosition(
-      locationSettings: const LocationSettings(accuracy: LocationAccuracy.high),
+      locationSettings: const LocationSettings(
+        accuracy: LocationAccuracy.best,
+        timeLimit: Duration(seconds: 10),
+      ),
     );
   }
 
@@ -41,8 +44,9 @@ class LocationService {
     if (defaultTargetPlatform == TargetPlatform.android) {
       settings = AndroidSettings(
         accuracy: LocationAccuracy.bestForNavigation,
-        distanceFilter: 3,
+        distanceFilter: 1,
         intervalDuration: const Duration(seconds: 1),
+        forceLocationManager: true,
         foregroundNotificationConfig: enableBackgroundTracking
             ? const ForegroundNotificationConfig(
                 notificationTitle: 'MyFuel trip tracking',
@@ -55,7 +59,7 @@ class LocationService {
         defaultTargetPlatform == TargetPlatform.macOS) {
       settings = AppleSettings(
         accuracy: LocationAccuracy.bestForNavigation,
-        distanceFilter: 3,
+        distanceFilter: 1,
         activityType: ActivityType.automotiveNavigation,
         pauseLocationUpdatesAutomatically: false,
         showBackgroundLocationIndicator: true,
@@ -63,7 +67,7 @@ class LocationService {
     } else {
       settings = const LocationSettings(
         accuracy: LocationAccuracy.bestForNavigation,
-        distanceFilter: 3,
+        distanceFilter: 1,
       );
     }
 
