@@ -28,6 +28,7 @@ class VehicleService {
     final data = await _supabase
         .from('vehicles')
         .select()
+        .eq('is_deleted', false)
         .order('created_at', ascending: false);
 
     return (data as List<dynamic>)
@@ -41,6 +42,7 @@ class VehicleService {
         .select()
         .eq('assigned_user_id', userId)
         .eq('status', 'Assigned')
+        .eq('is_deleted', false)
         .maybeSingle();
     return data == null ? null : VehicleModel.fromJson(data);
   }
@@ -66,7 +68,15 @@ class VehicleService {
     }
 
     for (final vehicleId in vehicleIds) {
-      await _supabase.from('vehicles').delete().eq('id', vehicleId);
+      await _supabase
+          .from('vehicles')
+          .update({
+            'is_deleted': true,
+            'assigned_user_id': null,
+            'updated_at': DateTime.now().toIso8601String(),
+          })
+          .eq('id', vehicleId)
+          .eq('is_deleted', false);
     }
   }
 

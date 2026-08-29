@@ -9,6 +9,7 @@ class VehicleModel {
   final String? assignedUserId;
   final String status;
   final String notes;
+  final bool isDeleted;
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
@@ -23,6 +24,7 @@ class VehicleModel {
     required this.assignedUserId,
     required this.status,
     required this.notes,
+    this.isDeleted = false,
     this.createdAt,
     this.updatedAt,
   });
@@ -39,6 +41,7 @@ class VehicleModel {
       assignedUserId: json['assigned_user_id'],
       status: json['status'] ?? 'Available',
       notes: json['notes'] ?? '',
+      isDeleted: json['is_deleted'] == true,
       createdAt: _toDateTime(json['created_at']),
       updatedAt: _toDateTime(json['updated_at']),
     );
@@ -57,6 +60,7 @@ class VehicleModel {
       'assigned_user_id': assignedUserId,
       'status': status,
       'notes': notes,
+      'is_deleted': isDeleted,
       'created_at': now,
       'updated_at': now,
     };

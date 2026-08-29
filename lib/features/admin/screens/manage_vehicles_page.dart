@@ -122,8 +122,8 @@ class _ManageVehiclesPageState extends State<ManageVehiclesPage> {
         title: const Text('Delete vehicles?'),
         content: Text(
           count == 1
-              ? 'This vehicle will be permanently removed.'
-              : '$count vehicles will be permanently removed.',
+              ? 'This vehicle will be removed from active vehicle lists.'
+              : '$count vehicles will be removed from active vehicle lists.',
         ),
         actions: [
           TextButton(
