@@ -83,7 +83,6 @@ class _AdminDashboardContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isWide = MediaQuery.of(context).size.width >= 960;
     final assignedVehicles = vehicles
         .where((vehicle) => vehicle.assignedUserId?.isNotEmpty == true)
         .length;
@@ -98,53 +97,72 @@ class _AdminDashboardContent extends StatelessWidget {
       claims: claims,
     );
 
-    return ListView(
-      padding: const EdgeInsets.all(24),
-      children: [
-        GridView.count(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          crossAxisCount: isWide ? 4 : 2,
-          mainAxisSpacing: 12,
-          crossAxisSpacing: 12,
-          childAspectRatio: isWide ? 1.35 : 1.15,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isLandscape =
+            MediaQuery.orientationOf(context) == Orientation.landscape;
+        final isCompactLandscape = isLandscape && constraints.maxWidth >= 520;
+        final isWide = constraints.maxWidth >= 960;
+        final columnCount = isCompactLandscape || isWide ? 4 : 2;
+        final pagePadding = isCompactLandscape ? 16.0 : 24.0;
+
+        return ListView(
+          padding: EdgeInsets.all(pagePadding),
           children: [
-            _SummaryCard(
-              label: 'Total Vehicles',
-              value: vehicles.length.toString(),
-              icon: Icons.directions_car_outlined,
-              color: const Color(0xFFD32F2F),
+            GridView.count(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              crossAxisCount: columnCount,
+              mainAxisSpacing: 12,
+              crossAxisSpacing: 12,
+              mainAxisExtent: isCompactLandscape ? 108 : null,
+              childAspectRatio: isWide ? 1.35 : 1.15,
+              children: [
+                _SummaryCard(
+                  label: 'Total Vehicles',
+                  value: vehicles.length.toString(),
+                  icon: Icons.directions_car_outlined,
+                  color: const Color(0xFFD32F2F),
+                  compact: isCompactLandscape,
+                ),
+                _SummaryCard(
+                  label: 'Assigned',
+                  value: assignedVehicles.toString(),
+                  icon: Icons.assignment_ind_outlined,
+                  color: const Color(0xFF1976D2),
+                  compact: isCompactLandscape,
+                ),
+                _SummaryCard(
+                  label: 'Available',
+                  value: availableVehicles.toString(),
+                  icon: Icons.verified_outlined,
+                  color: const Color(0xFF2E7D32),
+                  compact: isCompactLandscape,
+                ),
+                _SummaryCard(
+                  label: 'Pending Claims',
+                  value: pendingClaims.toString(),
+                  icon: Icons.payments_outlined,
+                  color: const Color(0xFFFFA000),
+                  compact: isCompactLandscape,
+                ),
+              ],
             ),
-            _SummaryCard(
-              label: 'Assigned',
-              value: assignedVehicles.toString(),
-              icon: Icons.assignment_ind_outlined,
-              color: const Color(0xFF1976D2),
-            ),
-            _SummaryCard(
-              label: 'Available',
-              value: availableVehicles.toString(),
-              icon: Icons.verified_outlined,
-              color: const Color(0xFF2E7D32),
-            ),
-            _SummaryCard(
-              label: 'Pending Claims',
-              value: pendingClaims.toString(),
-              icon: Icons.payments_outlined,
-              color: const Color(0xFFFFA000),
+            SizedBox(height: isCompactLandscape ? 16 : 24),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: SizedBox(
+                width: isWide ? 520 : double.infinity,
+                child: _DashboardPanel(
+                  title: 'Pending Tasks',
+                  emptyText: 'No pending tasks right now.',
+                  items: attentionItems,
+                ),
+              ),
             ),
           ],
-        ),
-        const SizedBox(height: 24),
-        SizedBox(
-          width: isWide ? 520 : double.infinity,
-          child: _DashboardPanel(
-            title: 'Pending Tasks',
-            emptyText: 'No pending tasks right now.',
-            items: attentionItems,
-          ),
-        ),
-      ],
+        );
+      },
     );
   }
 
@@ -193,12 +211,14 @@ class _SummaryCard extends StatelessWidget {
   final String value;
   final IconData icon;
   final Color color;
+  final bool compact;
 
   const _SummaryCard({
     required this.label,
     required this.value,
     required this.icon,
     required this.color,
+    this.compact = false,
   });
 
   @override
@@ -210,39 +230,57 @@ class _SummaryCard extends StatelessWidget {
       elevation: 0,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            CircleAvatar(
-              backgroundColor: color.withValues(alpha: 0.12),
-              foregroundColor: color,
-              child: Icon(icon),
-            ),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  value,
-                  style: theme.textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
+        padding: EdgeInsets.all(compact ? 12 : 16),
+        child: compact
+            ? Row(
+                children: [
+                  CircleAvatar(
+                    radius: 18,
+                    backgroundColor: color.withValues(alpha: 0.12),
+                    foregroundColor: color,
+                    child: Icon(icon, size: 20),
                   ),
-                ),
-                Text(
-                  label,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: const Color(0xFF697079),
-                    fontWeight: FontWeight.w600,
+                  const SizedBox(width: 10),
+                  Expanded(child: _buildDetails(theme)),
+                ],
+              )
+            : Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  CircleAvatar(
+                    backgroundColor: color.withValues(alpha: 0.12),
+                    foregroundColor: color,
+                    child: Icon(icon),
                   ),
-                ),
-              ],
-            ),
-          ],
-        ),
+                  _buildDetails(theme),
+                ],
+              ),
       ),
+    );
+  }
+
+  Widget _buildDetails(ThemeData theme) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          value,
+          style: theme.textTheme.headlineSmall?.copyWith(
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        Text(
+          label,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: theme.textTheme.bodyMedium?.copyWith(
+            color: const Color(0xFF697079),
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ],
     );
   }
 }

@@ -23,7 +23,11 @@ class AdminShell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final showSidebar = MediaQuery.of(context).size.width >= 720;
+    final mediaQuery = MediaQuery.of(context);
+    final showSidebar = mediaQuery.size.width >= 720;
+    final compactSidebar =
+        mediaQuery.orientation == Orientation.landscape &&
+        mediaQuery.size.width < 1100;
     final isDashboard = selectedRoute == AppRoutes.admin;
 
     return Scaffold(
@@ -60,6 +64,7 @@ class AdminShell extends StatelessWidget {
                 selectedRoute: selectedRoute,
                 onLogout: () => _logout(context),
                 showTopSpacer: true,
+                compact: false,
               ),
             ),
       body: SafeArea(
@@ -67,10 +72,11 @@ class AdminShell extends StatelessWidget {
           children: [
             if (showSidebar)
               SizedBox(
-                width: 264,
+                width: compactSidebar ? 220 : 264,
                 child: _AdminSidebar(
                   selectedRoute: selectedRoute,
                   onLogout: () => _logout(context),
+                  compact: compactSidebar,
                 ),
               ),
             if (showSidebar) const VerticalDivider(width: 1),
@@ -86,11 +92,13 @@ class _AdminSidebar extends StatelessWidget {
   final String selectedRoute;
   final VoidCallback onLogout;
   final bool showTopSpacer;
+  final bool compact;
 
   const _AdminSidebar({
     required this.selectedRoute,
     required this.onLogout,
     this.showTopSpacer = false,
+    this.compact = false,
   });
 
   void _openRoute(BuildContext context, String routeName) {
@@ -108,9 +116,9 @@ class _AdminSidebar extends StatelessWidget {
       color: Colors.white,
       child: Padding(
         padding: EdgeInsets.fromLTRB(
-          16,
+          compact ? 10 : 16,
           showTopSpacer ? kToolbarHeight + 58 : 22,
-          16,
+          compact ? 10 : 16,
           16,
         ),
         child: Column(
@@ -123,36 +131,42 @@ class _AdminSidebar extends StatelessWidget {
                     icon: Icons.dashboard_outlined,
                     label: 'Dashboard',
                     selected: selectedRoute == AppRoutes.admin,
+                    compact: compact,
                     onTap: () => _openRoute(context, AppRoutes.admin),
                   ),
                   _SidebarItem(
                     icon: Icons.add_road_outlined,
                     label: 'Add Vehicle',
                     selected: selectedRoute == AppRoutes.addVehicle,
+                    compact: compact,
                     onTap: () => _openRoute(context, AppRoutes.addVehicle),
                   ),
                   _SidebarItem(
                     icon: Icons.assignment_ind_outlined,
                     label: 'Manage Vehicle',
                     selected: selectedRoute == AppRoutes.manageVehicles,
+                    compact: compact,
                     onTap: () => _openRoute(context, AppRoutes.manageVehicles),
                   ),
                   _SidebarItem(
                     icon: Icons.payments_outlined,
                     label: 'Fuel Claims',
                     selected: selectedRoute == AppRoutes.fuelClaims,
+                    compact: compact,
                     onTap: () => _openRoute(context, AppRoutes.fuelClaims),
                   ),
                   _SidebarItem(
                     icon: Icons.insights_outlined,
                     label: 'Fuel Monitoring',
                     selected: selectedRoute == AppRoutes.fuelMonitoring,
+                    compact: compact,
                     onTap: () => _openRoute(context, AppRoutes.fuelMonitoring),
                   ),
                   _SidebarItem(
                     icon: Icons.location_on_outlined,
                     label: 'Live Tracking',
                     selected: selectedRoute == AppRoutes.liveTracking,
+                    compact: compact,
                     onTap: () => _openRoute(context, AppRoutes.liveTracking),
                   ),
                 ],
@@ -162,6 +176,7 @@ class _AdminSidebar extends StatelessWidget {
             _SidebarItem(
               icon: Icons.logout_rounded,
               label: 'Logout',
+              compact: compact,
               onTap: onLogout,
             ),
           ],
@@ -176,12 +191,14 @@ class _SidebarItem extends StatelessWidget {
   final String label;
   final VoidCallback onTap;
   final bool selected;
+  final bool compact;
 
   const _SidebarItem({
     required this.icon,
     required this.label,
     required this.onTap,
     this.selected = false,
+    this.compact = false,
   });
 
   @override
@@ -194,13 +211,20 @@ class _SidebarItem extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(bottom: 6),
       child: ListTile(
+        dense: compact,
+        contentPadding: EdgeInsets.symmetric(horizontal: compact ? 10 : 16),
+        minLeadingWidth: compact ? 20 : null,
+        horizontalTitleGap: compact ? 8 : 16,
         selected: selected,
         selectedTileColor: theme.colorScheme.primary.withValues(alpha: 0.1),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        leading: Icon(icon, color: color),
+        leading: Icon(icon, color: color, size: compact ? 20 : 24),
         title: Text(
           label,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
           style: TextStyle(
+            fontSize: compact ? 13 : null,
             fontWeight: selected ? FontWeight.bold : FontWeight.w600,
             color: color,
           ),
