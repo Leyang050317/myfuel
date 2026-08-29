@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../../routes/app_routes.dart';
+import '../../home/widgets/driver_shell.dart';
 import '../../user/database/local_database.dart';
 import '../models/fuel_calculation_result.dart';
 
@@ -26,9 +28,10 @@ class _FuelHistoryPageState extends State<FuelHistoryPage> {
   }
 
   @override
-  Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: const Text('Fuel History')),
-    body: _loading
+  Widget build(BuildContext context) => DriverShell(
+    title: 'Fuel History',
+    selectedRoute: AppRoutes.fuelHistory,
+    child: _loading
         ? const Center(child: CircularProgressIndicator())
         : _items.isEmpty
         ? const Center(child: Text('No local calculations yet.'))

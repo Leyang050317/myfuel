@@ -13,9 +13,6 @@ class FuelTrendPage extends StatefulWidget {
 class _FuelTrendPageState extends State<FuelTrendPage> {
   final FuelTrendController _controller = FuelTrendController();
 
-  // 目前选择的燃油类型
-  String selectedFuel = "RON95";
-
   @override
   void initState() {
     super.initState();
@@ -25,11 +22,6 @@ class _FuelTrendPageState extends State<FuelTrendPage> {
 
   Future<void> _loadHistory() async {
     await _controller.loadHistory();
-
-    for (final item in _controller.history) {
-      print(item.date);
-      print(item.ron95);
-    }
 
     setState(() {});
   }
@@ -58,30 +50,6 @@ class _FuelTrendPageState extends State<FuelTrendPage> {
 
               const SizedBox(height: 24),
 
-              // Fuel Selector
-              Wrap(
-                spacing: 12,
-                children: List.generate(3, (index) {
-                  final fuels = ["RON95", "RON97", "Diesel"];
-
-                  final fuel = fuels[index];
-
-                  return ChoiceChip(
-                    label: Text(fuel),
-
-                    selected: selectedFuel == fuel,
-
-                    onSelected: (value) {
-                      setState(() {
-                        selectedFuel = fuel;
-                      });
-                    },
-                  );
-                }),
-              ),
-
-              const SizedBox(height: 30),
-
               Card(
                 elevation: 2,
                 shape: RoundedRectangleBorder(
@@ -89,10 +57,7 @@ class _FuelTrendPageState extends State<FuelTrendPage> {
                 ),
                 child: Padding(
                   padding: EdgeInsets.all(16),
-                  child: FuelTrendChart(
-                    history: _controller.history,
-                    fuelType: selectedFuel,
-                  ),
+                  child: FuelTrendChart(history: _controller.history),
                 ),
               ),
             ],

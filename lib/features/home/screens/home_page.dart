@@ -3,20 +3,21 @@ import '../../fuel_price/controllers/fuel_price_controller.dart';
 import '../../petrol_station/screens/map_page.dart';
 import '../../../routes/app_routes.dart';
 import '../../fuel_price/widgets/fuel_trend_preview.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
-import '../../map/screens/osm_test_page.dart';
 import '../../fuel_tracking/pages/fuel_tracking_page.dart';
+import '../widgets/driver_shell.dart';
 
 /// Main home screen container
 class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+  final int initialIndex;
+
+  const HomePage({super.key, this.initialIndex = 0});
 
   @override
   State<HomePage> createState() => _HomePageState();
 }
 
 class _HomePageState extends State<HomePage> {
-  int _currentIndex = 0;
+  late final int _currentIndex;
 
   final FuelPriceController _fuelController = FuelPriceController();
 
@@ -24,7 +25,7 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
-
+    _currentIndex = widget.initialIndex;
     _loadFuelPrice();
   }
 
@@ -32,19 +33,6 @@ class _HomePageState extends State<HomePage> {
   Future<void> _loadFuelPrice() async {
     await _fuelController.loadFuelPrice();
     setState(() {});
-  }
-
-  /// 切换侧边导航页面
-  void _navigateToTab(int index) {
-    setState(() {
-      _currentIndex = index;
-    });
-  }
-
-  Future<void> _logout() async {
-    await Supabase.instance.client.auth.signOut();
-    if (!mounted) return;
-    Navigator.of(context).pushReplacementNamed(AppRoutes.login);
   }
 
   String get _pageTitle {
@@ -61,240 +49,29 @@ class _HomePageState extends State<HomePage> {
   /// 建立首页画面
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final showSidebar = MediaQuery.of(context).size.width >= 720;
+    final selectedRoute = switch (_currentIndex) {
+      1 => AppRoutes.driverPetrolMap,
+      2 => AppRoutes.driverTripLog,
+      _ => AppRoutes.home,
+    };
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          _pageTitle,
-          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+    return DriverShell(
+      title: _pageTitle,
+      selectedRoute: selectedRoute,
+      actions: [
+        IconButton(
+          icon: const Icon(Icons.bug_report),
+          tooltip: 'Developer Test',
+          onPressed: () => Navigator.of(context).pushNamed(AppRoutes.osmTest),
         ),
-        backgroundColor: Colors.white,
-        foregroundColor: theme.colorScheme.onSurface,
-        elevation: 0,
-        centerTitle: false,
-        leading: showSidebar
-            ? null
-            : Builder(
-                builder: (context) {
-                  return IconButton(
-                    tooltip: 'Menu',
-                    onPressed: () {
-                      Scaffold.of(context).openDrawer();
-                    },
-                    icon: const Icon(Icons.menu_rounded),
-                  );
-                },
-              ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.bug_report),
-            tooltip: 'Developer Test',
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const OSMTestPage()),
-              );
-            },
-          ),
-
-          IconButton(
-            onPressed: _logout,
-            icon: const Icon(Icons.logout_rounded),
-            tooltip: 'Logout',
-          ),
-          const SizedBox(width: 8),
+      ],
+      child: IndexedStack(
+        index: _currentIndex,
+        children: [
+          _HomeDashboard(fuelController: _fuelController),
+          const MapPage(),
+          const FuelTrackingPage(),
         ],
-      ),
-      drawer: showSidebar
-          ? null
-          : Drawer(
-              child: _DriverSidebar(
-                currentIndex: _currentIndex,
-                onSelect: (index) {
-                  Navigator.of(context).pop();
-                  _navigateToTab(index);
-                },
-                onDeveloperTest: () {
-                  Navigator.of(context).pop();
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const OSMTestPage()),
-                  );
-                },
-                onLogout: () {
-                  Navigator.of(context).pop();
-                  _logout();
-                },
-                showTopSpacer: true,
-              ),
-            ),
-      body: SafeArea(
-        child: Row(
-          children: [
-            if (showSidebar)
-              SizedBox(
-                width: 260,
-                child: _DriverSidebar(
-                  currentIndex: _currentIndex,
-                  onSelect: _navigateToTab,
-                  onDeveloperTest: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (_) => const OSMTestPage()),
-                    );
-                  },
-                  onLogout: _logout,
-                ),
-              ),
-            if (showSidebar) const VerticalDivider(width: 1),
-            Expanded(
-              child: IndexedStack(
-                index: _currentIndex,
-                children: [
-                  _HomeDashboard(fuelController: _fuelController),
-                  const MapPage(),
-                  const FuelTrackingPage(),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _DriverSidebar extends StatelessWidget {
-  final int currentIndex;
-  final ValueChanged<int> onSelect;
-  final VoidCallback onDeveloperTest;
-  final VoidCallback onLogout;
-  final bool showTopSpacer;
-
-  const _DriverSidebar({
-    required this.currentIndex,
-    required this.onSelect,
-    required this.onDeveloperTest,
-    required this.onLogout,
-    this.showTopSpacer = false,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: Colors.white,
-      child: Padding(
-        padding: EdgeInsets.fromLTRB(
-          16,
-          showTopSpacer ? kToolbarHeight + 50 : 18,
-          16,
-          16,
-        ),
-        child: Column(
-          children: [
-            Expanded(
-              child: ListView(
-                padding: EdgeInsets.zero,
-                children: [
-                  _DriverSidebarItem(
-                    icon: Icons.home_outlined,
-                    label: 'Home',
-                    selected: currentIndex == 0,
-                    onTap: () => onSelect(0),
-                  ),
-                  _DriverSidebarItem(
-                    icon: Icons.map_outlined,
-                    label: 'Petrol Map',
-                    selected: currentIndex == 1,
-                    onTap: () => onSelect(1),
-                  ),
-                  _DriverSidebarItem(
-                    icon: Icons.route_outlined,
-                    label: 'Trip Log',
-                    selected: currentIndex == 2,
-                    onTap: () => onSelect(2),
-                  ),
-                  _DriverSidebarItem(
-                    icon: Icons.payments_outlined,
-                    label: 'Fuel Claim',
-                    onTap: () => Navigator.of(
-                      context,
-                    ).pushNamed(AppRoutes.fuelCalculator),
-                  ),
-                  _DriverSidebarItem(
-                    icon: Icons.history_outlined,
-                    label: 'Fuel History',
-                    onTap: () =>
-                        Navigator.of(context).pushNamed(AppRoutes.fuelHistory),
-                  ),
-                  _DriverSidebarItem(
-                    icon: Icons.local_gas_station_outlined,
-                    label: 'Add Refuel',
-                    onTap: () =>
-                        Navigator.of(context).pushNamed(AppRoutes.refuelRecord),
-                  ),
-                  _DriverSidebarItem(
-                    icon: Icons.insights_outlined,
-                    label: 'Fuel Dashboard',
-                    onTap: () => Navigator.of(
-                      context,
-                    ).pushNamed(AppRoutes.fuelDashboard),
-                  ),
-                  _DriverSidebarItem(
-                    icon: Icons.bug_report_outlined,
-                    label: 'Developer Test',
-                    onTap: onDeveloperTest,
-                  ),
-                ],
-              ),
-            ),
-            const Divider(height: 24),
-            _DriverSidebarItem(
-              icon: Icons.logout_rounded,
-              label: 'Logout',
-              onTap: onLogout,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _DriverSidebarItem extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final VoidCallback onTap;
-  final bool selected;
-
-  const _DriverSidebarItem({
-    required this.icon,
-    required this.label,
-    required this.onTap,
-    this.selected = false,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 6),
-      child: ListTile(
-        selected: selected,
-        selectedTileColor: theme.colorScheme.primary.withValues(alpha: 0.1),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        leading: Icon(icon, color: selected ? theme.colorScheme.primary : null),
-        title: Text(
-          label,
-          style: TextStyle(
-            fontWeight: selected ? FontWeight.bold : FontWeight.w600,
-            color: selected ? theme.colorScheme.primary : null,
-          ),
-        ),
-        onTap: onTap,
       ),
     );
   }

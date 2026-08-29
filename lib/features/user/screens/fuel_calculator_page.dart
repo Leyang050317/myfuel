@@ -1,6 +1,8 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import '../../../routes/app_routes.dart';
+import '../../home/widgets/driver_shell.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../fuel_tracking/models/fuel_calculation_result.dart';
@@ -158,18 +160,17 @@ class _FuelCalculatorPageState extends State<FuelCalculatorPage> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Fuel Claim'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            tooltip: 'Refresh Trips',
-            onPressed: _loading ? null : _refreshAll,
-          ),
-        ],
-      ),
-      body: _loading
+    return DriverShell(
+      title: 'Fuel Claim',
+      selectedRoute: AppRoutes.fuelCalculator,
+      actions: [
+        IconButton(
+          icon: const Icon(Icons.refresh),
+          tooltip: 'Refresh Trips',
+          onPressed: _loading ? null : _refreshAll,
+        ),
+      ],
+      child: _loading
           ? const Center(child: CircularProgressIndicator())
           : ListView(
               padding: const EdgeInsets.all(20),

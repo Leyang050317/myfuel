@@ -65,7 +65,7 @@ class _FuelTrendPreviewState extends State<FuelTrendPreview> {
                         padding: const EdgeInsets.all(8),
                         child: FuelTrendChart(
                           history: _controller.history,
-                          fuelType: "RON95",
+                          height: 104,
                         ),
                       ),
               ),

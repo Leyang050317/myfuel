@@ -27,6 +27,8 @@ class AppRoutes {
   static const String addVehicle = '/admin/add-vehicle';
   static const String manageVehicles = '/admin/manage-vehicles';
   static const String home = '/home';
+  static const String driverPetrolMap = '/home/petrol-map';
+  static const String driverTripLog = '/home/trip-log';
   static const String fuelTrend = '/fuel-trend';
   static const String osmTest = '/osm-test';
   static const String fuelCalculator = '/fuel-calculator';
@@ -47,6 +49,8 @@ class AppRoutes {
     addVehicle: (context) => const AddVehiclePage(),
     manageVehicles: (context) => const ManageVehiclesPage(),
     home: (context) => const HomePage(),
+    driverPetrolMap: (context) => const HomePage(initialIndex: 1),
+    driverTripLog: (context) => const HomePage(initialIndex: 2),
     fuelTrend: (context) => const FuelTrendPage(),
 
     osmTest: (context) => const OSMTestPage(),

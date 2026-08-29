@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../../routes/app_routes.dart';
 import '../../admin/models/vehicle_model.dart';
 import '../../admin/services/vehicle_service.dart';
+import '../../home/widgets/driver_shell.dart';
 import '../../fuel_price/services/fuel_price_service.dart';
 import '../models/refuel_record_model.dart';
 import '../services/fuel_calculator.dart';
@@ -100,11 +102,16 @@ class _RefuelRecordPageState extends State<RefuelRecordPage> {
   @override
   Widget build(BuildContext context) {
     if (_loading) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+      return const DriverShell(
+        title: 'Add Refuel',
+        selectedRoute: AppRoutes.refuelRecord,
+        child: Center(child: CircularProgressIndicator()),
+      );
     }
-    return Scaffold(
-      appBar: AppBar(title: const Text('Add Refuel')),
-      body: Form(
+    return DriverShell(
+      title: 'Add Refuel',
+      selectedRoute: AppRoutes.refuelRecord,
+      child: Form(
         key: _form,
         child: ListView(
           padding: const EdgeInsets.all(24),

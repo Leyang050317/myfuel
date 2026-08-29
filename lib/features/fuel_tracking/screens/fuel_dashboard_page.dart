@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../../routes/app_routes.dart';
 import '../../admin/models/vehicle_model.dart';
 import '../../admin/services/vehicle_service.dart';
+import '../../home/widgets/driver_shell.dart';
 import '../../user/database/local_database.dart';
 import '../models/fuel_calculation_result.dart';
 import '../services/fuel_calculator.dart';
@@ -79,9 +81,10 @@ class _FuelDashboardPageState extends State<FuelDashboardPage> {
           expectedEfficiency: _vehicle!.fuelEfficiencyKmPerLiter,
           actualEfficiency: _actual!,
         );
-    return Scaffold(
-      appBar: AppBar(title: const Text('Fuel Dashboard')),
-      body: _loading
+    return DriverShell(
+      title: 'Fuel Dashboard',
+      selectedRoute: AppRoutes.fuelDashboard,
+      child: _loading
           ? const Center(child: CircularProgressIndicator())
           : ListView(
               padding: const EdgeInsets.all(24),
