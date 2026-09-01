@@ -11,9 +11,9 @@ class FuelTrendChart extends StatelessWidget {
 
   const FuelTrendChart({super.key, required this.history, this.height = 250});
 
-  static const _ron95Color = Color(0xFFD32F2F);
-  static const _ron97Color = Color(0xFF1976D2);
-  static const _dieselColor = Color(0xFFFFA000);
+  static const _ron95Color = Color(0xFFD84735);
+  static const _ron97Color = Color(0xFFF06B32);
+  static const _dieselColor = Color(0xFFF3A42B);
 
   @override
   Widget build(BuildContext context) {

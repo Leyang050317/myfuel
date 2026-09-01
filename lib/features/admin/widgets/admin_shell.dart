@@ -31,13 +31,11 @@ class AdminShell extends StatelessWidget {
     final isDashboard = selectedRoute == AppRoutes.admin;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF6F7F9),
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
-        title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
-        backgroundColor: Colors.white,
-        foregroundColor: theme.colorScheme.onSurface,
-        surfaceTintColor: Colors.white,
-        elevation: 0,
+        toolbarHeight: 68,
+        titleSpacing: 20,
+        title: Text(title),
         leading: isDashboard
             ? showSidebar
                   ? null
@@ -79,7 +77,8 @@ class AdminShell extends StatelessWidget {
                   compact: compactSidebar,
                 ),
               ),
-            if (showSidebar) const VerticalDivider(width: 1),
+            if (showSidebar)
+              const VerticalDivider(width: 1, color: Color(0xFFF0E2DC)),
             Expanded(child: child),
           ],
         ),
@@ -113,7 +112,7 @@ class _AdminSidebar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: Colors.white,
+      color: const Color(0xFF3A1B17),
       child: Padding(
         padding: EdgeInsets.fromLTRB(
           compact ? 10 : 16,
@@ -123,6 +122,46 @@ class _AdminSidebar extends StatelessWidget {
         ),
         child: Column(
           children: [
+            if (!showTopSpacer) ...[
+              Padding(
+                padding: EdgeInsets.fromLTRB(
+                  compact ? 8 : 12,
+                  4,
+                  compact ? 8 : 12,
+                  24,
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFFA343),
+                        borderRadius: BorderRadius.circular(13),
+                      ),
+                      child: const Icon(
+                        Icons.local_gas_station_rounded,
+                        color: Color(0xFF3A1B17),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    const Expanded(
+                      child: Text(
+                        'MyFuel Admin',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: -0.5,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
             Expanded(
               child: ListView(
                 padding: EdgeInsets.zero,
@@ -172,7 +211,7 @@ class _AdminSidebar extends StatelessWidget {
                 ],
               ),
             ),
-            const Divider(height: 24),
+            const Divider(height: 24, color: Color(0xFF60372F)),
             _SidebarItem(
               icon: Icons.logout_rounded,
               label: 'Logout',
@@ -203,10 +242,7 @@ class _SidebarItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final color = selected
-        ? theme.colorScheme.primary
-        : const Color(0xFF42474D);
+    final color = selected ? const Color(0xFF3A1B17) : const Color(0xFFE0C9C2);
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 6),
@@ -216,8 +252,9 @@ class _SidebarItem extends StatelessWidget {
         minLeadingWidth: compact ? 20 : null,
         horizontalTitleGap: compact ? 8 : 16,
         selected: selected,
-        selectedTileColor: theme.colorScheme.primary.withValues(alpha: 0.1),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        selectedTileColor: const Color(0xFFFFA343),
+        hoverColor: Colors.white.withValues(alpha: 0.06),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
         leading: Icon(icon, color: color, size: compact ? 20 : 24),
         title: Text(
           label,
@@ -225,7 +262,7 @@ class _SidebarItem extends StatelessWidget {
           overflow: TextOverflow.ellipsis,
           style: TextStyle(
             fontSize: compact ? 13 : null,
-            fontWeight: selected ? FontWeight.bold : FontWeight.w600,
+            fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
             color: color,
           ),
         ),

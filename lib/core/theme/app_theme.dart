@@ -2,16 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class AppTheme {
-  static const Color primaryColor = Color(0xFFD32F2F); // Red
-  static const Color secondaryColor = Color(0xFF1976D2); // Blue
-  static const Color accentColor = Color(0xFFFFC107); // Amber
-  static const Color backgroundColor = Color(
-    0xFFF8F9FA,
-  );
+  static const Color primaryColor = Color(0xFFD84735);
+  static const Color secondaryColor = Color(0xFF7A3026);
+  static const Color accentColor = Color(0xFFF39A27);
+  static const Color backgroundColor = Color(0xFFFFF8F4);
   static const Color cardColor = Colors.white;
 
-  static const Color textPrimary = Color(0xFF212121);
-  static const Color textSecondary = Color(0xFF757575);
+  static const Color textPrimary = Color(0xFF2A1A17);
+  static const Color textSecondary = Color(0xFF796661);
 
   static ThemeData get lightTheme {
     final baseTheme = ThemeData.light();
@@ -20,34 +18,50 @@ class AppTheme {
       useMaterial3: true,
       colorScheme: ColorScheme.fromSeed(
         seedColor: primaryColor,
+        brightness: Brightness.light,
         primary: primaryColor,
         secondary: secondaryColor,
         tertiary: accentColor,
-        background: backgroundColor,
         surface: cardColor,
-        onBackground: textPrimary,
         onSurface: textPrimary,
       ),
       scaffoldBackgroundColor: backgroundColor,
+      dividerColor: const Color(0xFFF0E2DC),
+
+      appBarTheme: const AppBarTheme(
+        backgroundColor: backgroundColor,
+        foregroundColor: textPrimary,
+        surfaceTintColor: Colors.transparent,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        centerTitle: false,
+        titleTextStyle: TextStyle(
+          color: textPrimary,
+          fontSize: 20,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
 
       cardTheme: CardThemeData(
         color: cardColor,
-        elevation: 3,
-        shadowColor: Colors.black.withValues(alpha: 0.05),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        elevation: 0,
+        shadowColor: Colors.transparent,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
       ),
 
       textTheme: GoogleFonts.poppinsTextTheme(
         baseTheme.textTheme.copyWith(
           titleLarge: const TextStyle(
-            fontSize: 26,
-            fontWeight: FontWeight.bold,
+            fontSize: 28,
+            fontWeight: FontWeight.w700,
             color: textPrimary,
+            letterSpacing: -0.8,
           ),
           titleMedium: const TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
+            fontSize: 19,
+            fontWeight: FontWeight.w700,
             color: textPrimary,
+            letterSpacing: -0.3,
           ),
           bodyLarge: const TextStyle(fontSize: 16, color: textPrimary),
           bodyMedium: const TextStyle(fontSize: 14, color: textSecondary),
@@ -59,10 +73,9 @@ class AppTheme {
           backgroundColor: primaryColor,
           foregroundColor: Colors.white,
           minimumSize: const Size(double.infinity, 55),
-          elevation: 2,
-          shadowColor: primaryColor.withValues(alpha: 0.3),
+          elevation: 0,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(18),
           ),
           textStyle: const TextStyle(
             fontSize: 16,
@@ -74,7 +87,7 @@ class AppTheme {
 
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: const Color(0xFFF1F3F5),
+        fillColor: const Color(0xFFFFF0EA),
         errorMaxLines: 3,
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 16,
@@ -85,23 +98,23 @@ class AppTheme {
         prefixIconColor: textSecondary,
         suffixIconColor: textSecondary,
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(18),
           borderSide: BorderSide.none,
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(18),
           borderSide: BorderSide.none,
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(18),
           borderSide: const BorderSide(color: primaryColor, width: 1.5),
         ),
         errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(18),
           borderSide: const BorderSide(color: primaryColor, width: 1),
         ),
         focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(18),
           borderSide: const BorderSide(color: primaryColor, width: 1.5),
         ),
       ),
