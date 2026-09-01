@@ -1,14 +1,8 @@
 import 'password_policy.dart';
 
-/// Provides reusable validation methods for authentication forms.
-///
-/// Every validation method returns:
-/// - `null` if the input is valid.
-/// - An error message if the input is invalid.
 class Validators {
   Validators._();
 
-  /// Validates full name.
   static String? validateName(String? value) {
     if (value == null || value.trim().isEmpty) {
       return 'Please enter your full name.';
@@ -21,7 +15,6 @@ class Validators {
     return null;
   }
 
-  /// Validates username.
   static String? validateUsername(String? value) {
     if (value == null || value.trim().isEmpty) {
       return 'Please enter a username.';
@@ -34,28 +27,31 @@ class Validators {
     return null;
   }
 
-  /// Validates email address.
   static String? validateEmail(String? value) {
     if (value == null || value.trim().isEmpty) {
       return 'Please enter your email address.';
     }
 
-    final emailRegex = RegExp(r'^[\w\.-]+@[\w\.-]+\.\w+$');
+    final email = value.trim();
+    final emailRegex = RegExp(
+      r'^[A-Za-z0-9.!#$%&\x27*+/=?^_`{|}~-]+@'
+      r'[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?'
+      r'(?:\.[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?)+$',
+    );
 
-    if (!emailRegex.hasMatch(value.trim())) {
+    if (email.length > 254 || !emailRegex.hasMatch(email)) {
       return 'Please enter a valid email address.';
     }
 
     return null;
   }
 
-  /// Validates Malaysian phone number.
   static String? validatePhone(String? value) {
     if (value == null || value.trim().isEmpty) {
       return 'Please enter your phone number.';
     }
 
-    final phoneRegex = RegExp(r'^01[0-9]-?[0-9]{7,8}$');
+    final phoneRegex = RegExp(r'^01\d{8,9}$');
 
     if (!phoneRegex.hasMatch(value.trim())) {
       return 'Please enter a valid Malaysian phone number.';
@@ -64,7 +60,6 @@ class Validators {
     return null;
   }
 
-  /// Validates Malaysian IC number.
   static String? validateIC(String? value) {
     if (value == null || value.trim().isEmpty) {
       return 'Please enter your IC number.';
@@ -79,7 +74,6 @@ class Validators {
     return null;
   }
 
-  /// Validates password.
   static String? validatePassword(String? value) {
     if (value == null || value.isEmpty) {
       return 'Please enter your password.';
@@ -95,7 +89,6 @@ class Validators {
     return null;
   }
 
-  /// Validates confirm password.
   static String? validateConfirmPassword(
     String? value,
     String originalPassword,

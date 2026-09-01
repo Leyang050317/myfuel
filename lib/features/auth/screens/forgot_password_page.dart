@@ -3,7 +3,6 @@ import '../../../core/theme/app_theme.dart';
 import '../repositories/supabase_auth_repository.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-/// 忘记密码页面
 class ForgotPasswordPage extends StatefulWidget {
   const ForgotPasswordPage({super.key});
 
@@ -11,8 +10,6 @@ class ForgotPasswordPage extends StatefulWidget {
   State<ForgotPasswordPage> createState() => _ForgotPasswordPageState();
 }
 
-/// ForgotPasswordPage 的状态管理
-/// 负责验证电子邮件并发送重设密码连结
 class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
@@ -24,8 +21,6 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
     super.dispose();
   }
 
-  /// 验证电子邮件格式
-  /// 验证成功后模拟发送重设密码连结
   Future<void> _handleSendResetLink() async {
     if (!_formKey.currentState!.validate()) {
       return;
@@ -67,13 +62,11 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
     }
   }
 
-  /// 建立忘记密码页面画面
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final emailRegex = RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$');
 
-    // 忘记密码页面主体
     return Scaffold(
       backgroundColor: theme.colorScheme.surface,
       body: SafeArea(
@@ -85,7 +78,6 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
             children: [
               const SizedBox(height: 16),
 
-              // 返回登录页面按钮
               Row(
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: [
@@ -99,7 +91,6 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
 
               const SizedBox(height: 16),
 
-              // 页面图示（重设密码）
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
@@ -114,7 +105,6 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
               ),
               const SizedBox(height: 24),
 
-              // 页面标题
               Text('Forgot Password', style: theme.textTheme.titleLarge),
               const SizedBox(height: 10),
               Padding(
@@ -131,7 +121,6 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
 
               const SizedBox(height: 32),
 
-              // 重设密码表单
               Form(
                 key: _formKey,
                 child: Card(
@@ -142,7 +131,6 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                       children: [
                         const SizedBox(height: 8),
 
-                        // Email input field
                         TextFormField(
                           controller: _emailController,
                           keyboardType: TextInputType.emailAddress,
@@ -165,7 +153,6 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                         ),
                         const SizedBox(height: 24),
 
-                        // 发送重设密码连结按钮
                         SizedBox(
                           width: double.infinity,
                           child: ElevatedButton(

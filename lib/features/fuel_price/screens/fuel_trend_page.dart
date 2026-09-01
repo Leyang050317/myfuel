@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import '../widgets/fuel_trend_chart.dart';
 import '../controllers/fuel_trend_controller.dart';
 
-/// Fuel Trend 页面，显示历史油价走势图
 class FuelTrendPage extends StatefulWidget {
   const FuelTrendPage({super.key});
 

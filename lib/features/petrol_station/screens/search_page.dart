@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../core/theme/app_theme.dart';
 
-/// Screen for searching and filtering petrol stations by name, location, or brand.
 class SearchPage extends StatefulWidget {
   const SearchPage({super.key});
 
@@ -12,9 +11,8 @@ class SearchPage extends StatefulWidget {
 class _SearchPageState extends State<SearchPage> {
   String _searchQuery = '';
   String _selectedBrand =
-      'All'; // Filter option: 'All', 'Petronas', 'Shell', 'Caltex'
+      'All';
 
-  // Complete mock database of stations
   final List<Map<String, dynamic>> _allStations = [
     {
       'name': 'Petronas Station KLCC',
@@ -94,7 +92,6 @@ class _SearchPageState extends State<SearchPage> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    // Apply filters based on search query and selected brand chip
     final filteredStations = _allStations.where((station) {
       final matchesSearch =
           station['name'].toString().toLowerCase().contains(
@@ -122,7 +119,6 @@ class _SearchPageState extends State<SearchPage> {
       body: SafeArea(
         child: Column(
           children: [
-            // 1. Search Bar Header
             Padding(
               padding: const EdgeInsets.symmetric(
                 horizontal: 24.0,
@@ -152,7 +148,6 @@ class _SearchPageState extends State<SearchPage> {
               ),
             ),
 
-            // 2. Horizontal Filter Chips (M3 style)
             SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.symmetric(
@@ -198,7 +193,6 @@ class _SearchPageState extends State<SearchPage> {
             ),
             const SizedBox(height: 12),
 
-            // 3. Stations List
             Expanded(
               child: filteredStations.isEmpty
                   ? Center(
@@ -241,7 +235,6 @@ class _SearchPageState extends State<SearchPage> {
                             child: Row(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                // Left icon and brand colored square indicator
                                 Container(
                                   width: 46,
                                   height: 46,
@@ -258,7 +251,6 @@ class _SearchPageState extends State<SearchPage> {
                                 ),
                                 const SizedBox(width: 14),
 
-                                // Middle information
                                 Expanded(
                                   child: Column(
                                     crossAxisAlignment:
@@ -297,7 +289,6 @@ class _SearchPageState extends State<SearchPage> {
                                       ),
                                       const SizedBox(height: 12),
 
-                                      // Amenities icons row
                                       Row(
                                         children: [
                                           ...List.generate(
@@ -314,7 +305,6 @@ class _SearchPageState extends State<SearchPage> {
                                             ),
                                           ),
                                           const Spacer(),
-                                          // Small navigate button
                                           GestureDetector(
                                             onTap: () {
                                               ScaffoldMessenger.of(

@@ -1,21 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-/// Application-wide theme configuration enforcing Material 3 and custom styling.
 class AppTheme {
-  // Brand color scheme
   static const Color primaryColor = Color(0xFFD32F2F); // Red
   static const Color secondaryColor = Color(0xFF1976D2); // Blue
   static const Color accentColor = Color(0xFFFFC107); // Amber
   static const Color backgroundColor = Color(
     0xFFF8F9FA,
-  ); // Soft background grey
+  );
   static const Color cardColor = Colors.white;
 
   static const Color textPrimary = Color(0xFF212121);
   static const Color textSecondary = Color(0xFF757575);
 
-  /// Standard Material Design 3 light theme configurations.
   static ThemeData get lightTheme {
     final baseTheme = ThemeData.light();
 
@@ -33,7 +30,6 @@ class AppTheme {
       ),
       scaffoldBackgroundColor: backgroundColor,
 
-      // Modern card style with soft shadow
       cardTheme: CardThemeData(
         color: cardColor,
         elevation: 3,
@@ -41,7 +37,6 @@ class AppTheme {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       ),
 
-      // Standardize Google Fonts (Poppins) styling
       textTheme: GoogleFonts.poppinsTextTheme(
         baseTheme.textTheme.copyWith(
           titleLarge: const TextStyle(
@@ -59,7 +54,6 @@ class AppTheme {
         ),
       ),
 
-      // Standardize button styles with height 55, rounded corners 16px, and soft shadows
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           backgroundColor: primaryColor,
@@ -78,10 +72,10 @@ class AppTheme {
         ),
       ),
 
-      // Filled Input style with rounded corners 16px and subtle borders
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: const Color(0xFFF1F3F5),
+        errorMaxLines: 3,
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 16,
           vertical: 16,

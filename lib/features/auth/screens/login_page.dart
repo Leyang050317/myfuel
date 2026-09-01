@@ -6,7 +6,6 @@ import '../constants/admin_credentials.dart';
 import '../models/user_model.dart';
 import '../repositories/supabase_auth_repository.dart';
 
-/// 登录页面
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
 
@@ -14,17 +13,14 @@ class LoginPage extends StatefulWidget {
   State<LoginPage> createState() => _LoginPageState();
 }
 
-/// LoginPage 的状态管理，
-/// 负责输入验证、登入流程及页面跳转。
 class _LoginPageState extends State<LoginPage> {
-  final _formKey = GlobalKey<FormState>(); // 表单验证 Key
-  final _emailController = TextEditingController(); // 用户名称输入控制器
-  final _passwordController = TextEditingController(); // 密码输入控制器
+  final _formKey = GlobalKey<FormState>();
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
   final _authRepository = SupabaseAuthRepository();
-  bool _obscurePassword = true; // 控制密码是否隐藏显示
+  bool _obscurePassword = true;
   bool _isLoading = false;
 
-  /// 释放输入控制器资源，避免记忆体泄漏
   @override
   void dispose() {
     _emailController.dispose();
@@ -32,8 +28,6 @@ class _LoginPageState extends State<LoginPage> {
     super.dispose();
   }
 
-  /// 验证用户输入资料
-  /// 验证成功后显示欢迎讯息并进入首页
   Future<void> _handleLogin() async {
     if (!_formKey.currentState!.validate()) {
       return;
@@ -96,12 +90,10 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
-  /// 建立登录页面画面
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    // 登录页面主体
     return Scaffold(
       backgroundColor: theme.colorScheme.surface,
       body: SafeArea(
@@ -113,7 +105,6 @@ class _LoginPageState extends State<LoginPage> {
             children: [
               const SizedBox(height: 24),
 
-              // App Logo
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
@@ -128,11 +119,9 @@ class _LoginPageState extends State<LoginPage> {
               ),
               const SizedBox(height: 16),
 
-              // App Title & Subtitle
               Text('MyFuel', style: theme.textTheme.titleLarge),
               const SizedBox(height: 38),
 
-              // 登录表单
               Form(
                 key: _formKey,
                 child: Card(
@@ -144,7 +133,6 @@ class _LoginPageState extends State<LoginPage> {
                       children: [
                         const SizedBox(height: 8),
 
-                        // Username
                         TextFormField(
                           controller: _emailController,
                           keyboardType: TextInputType.name,
@@ -164,7 +152,6 @@ class _LoginPageState extends State<LoginPage> {
 
                         const SizedBox(height: 20),
 
-                        // Password
                         TextFormField(
                           controller: _passwordController,
                           obscureText: _obscurePassword,
@@ -197,7 +184,6 @@ class _LoginPageState extends State<LoginPage> {
 
                         const SizedBox(height: 12),
 
-                        // Forgot Password Link
                         Align(
                           alignment: Alignment.centerRight,
                           child: TextButton(
@@ -228,7 +214,6 @@ class _LoginPageState extends State<LoginPage> {
 
                         const SizedBox(height: 16),
 
-                        // Login Button
                         SizedBox(
                           width: double.infinity,
                           child: ElevatedButton(
@@ -254,7 +239,6 @@ class _LoginPageState extends State<LoginPage> {
 
               const SizedBox(height: 28),
 
-              // Don't have an account? Register
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [

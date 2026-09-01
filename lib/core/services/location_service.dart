@@ -1,11 +1,9 @@
-/// Core service for accessing device GPS and location data.
 library;
 
 import 'package:flutter/foundation.dart';
 import 'package:geolocator/geolocator.dart';
 
 class LocationService {
-  /// Request location permission
   Future<bool> requestPermission() async {
     final serviceEnabled = await Geolocator.isLocationServiceEnabled();
 
@@ -27,7 +25,6 @@ class LocationService {
         permission == LocationPermission.whileInUse;
   }
 
-  /// Get current GPS location once
   Future<Position> getCurrentLocation() async {
     return await Geolocator.getCurrentPosition(
       locationSettings: const LocationSettings(
@@ -37,7 +34,6 @@ class LocationService {
     );
   }
 
-  /// Live GPS tracking
   Stream<Position> getPositionStream({bool enableBackgroundTracking = false}) {
     final LocationSettings settings;
 

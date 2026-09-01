@@ -9,7 +9,6 @@ class FuelTrendController {
   Future<void> loadHistory() async {
     final allHistory = await _service.getFuelHistory();
 
-    // 只保留最新 6 周
     history = allHistory.take(6).toList();
   }
 }

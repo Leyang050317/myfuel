@@ -58,8 +58,6 @@ class _FuelCalculatorPageState extends State<FuelCalculatorPage> {
             _applyClaims(claims);
           },
           onError: (Object _) {
-            // Realtime may not be enabled for fuel_claims. REST polling keeps
-            // claim statuses synchronized without showing a fatal UI error.
             unawaited(_loadClaimsFromServer());
           },
         );
@@ -70,7 +68,6 @@ class _FuelCalculatorPageState extends State<FuelCalculatorPage> {
     try {
       _applyClaims(await _claimService.loadClaims(userId: _userId));
     } catch (_) {
-      // A temporary network failure must not hide locally completed trips.
     }
   }
 

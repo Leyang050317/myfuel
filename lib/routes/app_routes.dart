@@ -17,7 +17,6 @@ import '../features/admin/screens/fuel_claims_page.dart';
 import '../features/admin/screens/fuel_monitoring_page.dart';
 import '../features/admin/screens/live_tracking_page.dart';
 
-/// Application route name constants and route map definitions.
 class AppRoutes {
   static const String splash = '/';
   static const String login = '/login';

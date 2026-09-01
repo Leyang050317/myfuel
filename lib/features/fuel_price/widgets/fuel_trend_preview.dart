@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import '../controllers/fuel_trend_controller.dart';
 import 'fuel_trend_chart.dart';
 
-/// Fuel Trend 预览卡片
 class FuelTrendPreview extends StatefulWidget {
   const FuelTrendPreview({super.key});
 

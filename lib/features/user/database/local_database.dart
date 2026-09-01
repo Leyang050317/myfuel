@@ -5,7 +5,6 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 
 import '../../fuel_tracking/models/fuel_calculation_result.dart';
 
-/// Device-only storage for calculation snapshots; shared business records stay in Supabase.
 class LocalDatabase {
   LocalDatabase._();
   static final LocalDatabase instance = LocalDatabase._();

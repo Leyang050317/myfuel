@@ -5,7 +5,6 @@ import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'app.dart';
 
-/// Entry point of the MyFuel application.
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 

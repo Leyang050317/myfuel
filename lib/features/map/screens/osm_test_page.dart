@@ -13,16 +13,12 @@ class OSMTestPage extends StatefulWidget {
 }
 
 class _OSMTestPageState extends State<OSMTestPage> {
-  /// Variables
   Position? _currentPosition;
 
-  ///latest GPS locations
   final MapController _mapController = MapController();
 
-  ///Move map automatically
   final LocationService _locationService = LocationService();
   StreamSubscription<Position>? _positionStream;
-  //get current locations
 
   Future<void> _initializeLocation() async {
     bool granted = await _locationService.requestPermission();
@@ -71,7 +67,7 @@ class _OSMTestPageState extends State<OSMTestPage> {
         mapController: _mapController,
 
         options: const MapOptions(
-          initialCenter: LatLng(3.1390, 101.6869), // Kuala Lumpur
+          initialCenter: LatLng(3.1390, 101.6869),
           initialZoom: 15,
         ),
         children: [

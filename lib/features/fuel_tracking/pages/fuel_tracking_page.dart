@@ -171,8 +171,6 @@ class _FuelTrackingPageState extends State<FuelTrackingPage>
     try {
       _handlePosition(await _locationService.getCurrentLocation());
     } catch (_) {
-      // The position stream error handler already informs the user. Keep the
-      // watchdog alive so it can recover automatically when GPS returns.
     } finally {
       _positionPollInProgress = false;
     }
@@ -397,15 +395,12 @@ class _FuelTrackingPageState extends State<FuelTrackingPage>
 
                         onTap: () async {
                           FocusScope.of(context).unfocus();
-                          // Fill search bar
                           _searchController.text = destination.name;
-                          // Hide suggestion list
                           setState(() {
                             _searchResults.clear();
                             _selectedDestination = destination;
                           });
 
-                          // Calculate route
                           try {
                             final route = await _routeService.getRoute(
                               start: LatLng(
@@ -657,7 +652,6 @@ class _FuelTrackingPageState extends State<FuelTrackingPage>
         ),
       );
     } catch (_) {
-      // Local history failure must not interrupt trip completion.
     }
   }
 

@@ -6,7 +6,6 @@ import '../../fuel_price/widgets/fuel_trend_preview.dart';
 import '../../fuel_tracking/pages/fuel_tracking_page.dart';
 import '../widgets/driver_shell.dart';
 
-/// Main home screen container
 class HomePage extends StatefulWidget {
   final int initialIndex;
 
@@ -21,7 +20,6 @@ class _HomePageState extends State<HomePage> {
 
   final FuelPriceController _fuelController = FuelPriceController();
 
-  /// 初始化页面，并读取最新油价资料
   @override
   void initState() {
     super.initState();
@@ -29,7 +27,6 @@ class _HomePageState extends State<HomePage> {
     _loadFuelPrice();
   }
 
-  /// 从 Controller 读取最新油价，并更新画面
   Future<void> _loadFuelPrice() async {
     await _fuelController.loadFuelPrice();
     setState(() {});
@@ -46,7 +43,6 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  /// 建立首页画面
   @override
   Widget build(BuildContext context) {
     final selectedRoute = switch (_currentIndex) {
@@ -77,7 +73,6 @@ class _HomePageState extends State<HomePage> {
   }
 }
 
-/// 首页仪表板，负责显示油价资讯
 class _HomeDashboard extends StatelessWidget {
   final FuelPriceController fuelController;
 
@@ -94,7 +89,6 @@ class _HomeDashboard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 欢迎讯息
             Text('Welcome to MyFuel!', style: theme.textTheme.titleLarge),
             const SizedBox(height: 4),
             Text(
@@ -103,12 +97,10 @@ class _HomeDashboard extends StatelessWidget {
             ),
             const SizedBox(height: 24),
 
-            // 油价资讯标题
             Text('Fuel Prices', style: theme.textTheme.titleMedium),
 
             const SizedBox(height: 12),
 
-            // 显示最新油价更新时间
             Text(
               fuelController.fuelPrice == null
                   ? "Loading..."
@@ -120,7 +112,6 @@ class _HomeDashboard extends StatelessWidget {
 
             const SizedBox(height: 12),
 
-            // RON95 油价资讯卡
             _buildFuelPriceCard(
               context,
               title: 'RON 95',
@@ -134,7 +125,6 @@ class _HomeDashboard extends StatelessWidget {
             ),
             const SizedBox(height: 12),
 
-            // RON97 油价资讯卡
             _buildFuelPriceCard(
               context,
               title: 'RON 97',
@@ -149,7 +139,6 @@ class _HomeDashboard extends StatelessWidget {
 
             const SizedBox(height: 12),
 
-            // Diesel 油价资讯卡
             _buildFuelPriceCard(
               context,
               title: 'Diesel',
@@ -171,13 +160,12 @@ class _HomeDashboard extends StatelessWidget {
     );
   }
 
-  /// 建立单张油价资讯卡片
   Widget _buildFuelPriceCard(
     BuildContext context, {
-    required String title, // 油品名称
-    required String price, // 目前油价
-    required Color color, // 卡片主题颜色
-    required String status, // 本周价格变化
+    required String title,
+    required String price,
+    required Color color,
+    required String status,
   }) {
     final theme = Theme.of(context);
     final isAmber = color == theme.colorScheme.tertiary;
@@ -187,7 +175,6 @@ class _HomeDashboard extends StatelessWidget {
       margin: EdgeInsets.zero,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
 
-      // 油价卡片内容
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
         decoration: BoxDecoration(
@@ -198,7 +185,6 @@ class _HomeDashboard extends StatelessWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            // 左侧显示油品名称及本周价格变化
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -219,7 +205,6 @@ class _HomeDashboard extends StatelessWidget {
               ],
             ),
 
-            // 右侧显示目前油价
             Text(
               price,
               style: theme.textTheme.titleLarge?.copyWith(

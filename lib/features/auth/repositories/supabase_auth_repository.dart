@@ -8,32 +8,16 @@ class SupabaseAuthRepository implements AuthRepository {
 
   @override
   Future<void> register(UserModel user) async {
-    print("===== STEP 1: Signing up =====");
-
-    AuthResponse response;
-
-    try {
-      response = await _supabase.auth.signUp(
-        email: user.email,
-        password: user.password,
-      );
-    } on AuthException catch (e) {
-      print("================================");
-      print("AUTH EXCEPTION");
-      print("Message: ${e.message}");
-      print("Status: ${e.statusCode}");
-      print("================================");
-      rethrow;
-    } catch (e) {
-      print("================================");
-      print("UNKNOWN ERROR");
-      print(e);
-      print("================================");
-      rethrow;
-    }
-
-    print("===== STEP 2 =====");
-    print(response.user);
+    final response = await _supabase.auth.signUp(
+      email: user.email,
+      password: user.password,
+      data: {
+        'full_name': user.fullName,
+        'username': user.username,
+        'phone_number': user.phoneNumber,
+        'ic_number': user.icNumber,
+      },
+    );
 
     final authUser = response.user;
 
@@ -41,27 +25,11 @@ class SupabaseAuthRepository implements AuthRepository {
       throw Exception("Supabase returned null user.");
     }
 
-    print("===== STEP 3: Inserting profile =====");
-
-    try {
-      await _supabase.from('users').insert({
-        'id': authUser.id,
-        'full_name': user.fullName,
-        'username': user.username,
-        'email': user.email,
-        'phone_number': user.phoneNumber,
-        'ic_number': user.icNumber,
-      });
-
-      print("===== STEP 4: SUCCESS =====");
-    } on PostgrestException catch (e) {
-      print("==============================");
-      print("DATABASE ERROR");
-      print("Message: ${e.message}");
-      print("Code: ${e.code}");
-      print("Details: ${e.details}");
-      print("==============================");
-      rethrow;
+    // With email confirmation enabled, signUp returns no session. The profile
+    // is created after the user verifies their email and signs in, when RLS can
+    // safely identify them through auth.uid().
+    if (response.session != null) {
+      await _ensureUserProfile(authUser);
     }
   }
 
@@ -82,11 +50,7 @@ class SupabaseAuthRepository implements AuthRepository {
         return null;
       }
 
-      final data = await _supabase
-          .from('users')
-          .select()
-          .eq('id', authUser.id)
-          .single();
+      final data = await _ensureUserProfile(authUser);
 
       return UserModel.fromJson(data);
     } on AuthException {
@@ -117,11 +81,7 @@ class SupabaseAuthRepository implements AuthRepository {
   }
 
   @override
-  Future<void> sendEmailVerification() async {
-    // Supabase automatically sends the confirmation email during sign-up.
-  }
-
-  // ---------- Temporary placeholders ----------
+  Future<void> sendEmailVerification() async {}
 
   @override
   Future<bool> usernameExists(String username) async {
@@ -144,5 +104,32 @@ class SupabaseAuthRepository implements AuthRepository {
   @override
   Future<UserModel?> getUserById(String id) async {
     throw UnimplementedError();
+  }
+
+  Future<Map<String, dynamic>> _ensureUserProfile(User authUser) async {
+    final existingProfile = await _supabase
+        .from('users')
+        .select()
+        .eq('id', authUser.id)
+        .maybeSingle();
+
+    if (existingProfile != null) {
+      return existingProfile;
+    }
+
+    final metadata = authUser.userMetadata ?? const <String, dynamic>{};
+
+    return await _supabase
+        .from('users')
+        .insert({
+          'id': authUser.id,
+          'full_name': metadata['full_name'] ?? '',
+          'username': metadata['username'] ?? '',
+          'email': authUser.email ?? '',
+          'phone_number': metadata['phone_number'] ?? '',
+          'ic_number': metadata['ic_number'] ?? '',
+        })
+        .select()
+        .single();
   }
 }
