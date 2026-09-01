@@ -25,9 +25,6 @@ class SupabaseAuthRepository implements AuthRepository {
       throw Exception("Supabase returned null user.");
     }
 
-    // With email confirmation enabled, signUp returns no session. The profile
-    // is created after the user verifies their email and signs in, when RLS can
-    // safely identify them through auth.uid().
     if (response.session != null) {
       await _ensureUserProfile(authUser);
     }
