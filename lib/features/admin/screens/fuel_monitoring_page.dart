@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -15,14 +17,34 @@ class _FuelMonitoringPageState extends State<FuelMonitoringPage> {
   bool _loading = true;
   List<Map<String, dynamic>> _records = [];
   String _sort = 'Highest cost';
+  StreamSubscription<List<Map<String, dynamic>>>? _recordsSubscription;
 
   @override
   void initState() {
     super.initState();
     _load();
+    _recordsSubscription = Supabase.instance.client
+        .from('refuel_records')
+        .stream(primaryKey: ['id'])
+        .listen(
+          (_) => _load(showLoading: false),
+          onError: (Object error) {
+            if (!mounted) return;
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Live fuel updates unavailable: $error')),
+            );
+          },
+        );
   }
 
-  Future<void> _load() async {
+  @override
+  void dispose() {
+    _recordsSubscription?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _load({bool showLoading = true}) async {
+    if (showLoading && mounted) setState(() => _loading = true);
     try {
       final data = await Supabase.instance.client
           .from('refuel_records')

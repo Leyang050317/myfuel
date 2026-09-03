@@ -17,5 +17,11 @@ create table if not exists public.vehicles (
 create index if not exists vehicles_assigned_user_id_idx
   on public.vehicles (assigned_user_id);
 
+-- Business rule: one active vehicle per driver. A partial unique index also
+-- protects against two admins assigning different vehicles at the same time.
+create unique index if not exists vehicles_one_active_assignment_per_driver_idx
+  on public.vehicles (assigned_user_id)
+  where assigned_user_id is not null and is_deleted = false;
+
 create index if not exists vehicles_is_deleted_idx
   on public.vehicles (is_deleted);

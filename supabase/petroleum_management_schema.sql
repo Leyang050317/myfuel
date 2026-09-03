@@ -40,6 +40,21 @@ create table if not exists public.refuel_records (
 );
 create index if not exists refuel_records_vehicle_date_idx on public.refuel_records (vehicle_id, refuelled_at desc);
 
+-- Required for the admin Fuel Monitoring page to receive new records live.
+do $$
+begin
+  if not exists (
+    select 1
+    from pg_publication_tables
+    where pubname = 'supabase_realtime'
+      and schemaname = 'public'
+      and tablename = 'refuel_records'
+  ) then
+    alter publication supabase_realtime add table public.refuel_records;
+  end if;
+end
+$$;
+
 alter table public.fuel_claims enable row level security;
 alter table public.refuel_records enable row level security;
 create policy "Users create own fuel claims" on public.fuel_claims for insert to authenticated with check (auth.uid() = user_id);

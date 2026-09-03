@@ -52,6 +52,26 @@ class VehicleService {
     required String? assignedUserId,
     required String status,
   }) async {
+    if (assignedUserId != null) {
+      final existingAssignment = await _supabase
+          .from('vehicles')
+          .select('id, plate_number')
+          .eq('assigned_user_id', assignedUserId)
+          .eq('is_deleted', false)
+          .neq('id', vehicleId)
+          .limit(1)
+          .maybeSingle();
+
+      if (existingAssignment != null) {
+        final plateNumber = existingAssignment['plate_number']?.toString();
+        throw StateError(
+          plateNumber == null || plateNumber.isEmpty
+              ? 'This driver already has an assigned vehicle.'
+              : 'This driver is already assigned to vehicle $plateNumber.',
+        );
+      }
+    }
+
     await _supabase
         .from('vehicles')
         .update({

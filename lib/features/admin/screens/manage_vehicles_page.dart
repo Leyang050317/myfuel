@@ -91,6 +91,20 @@ class _ManageVehiclesPageState extends State<ManageVehiclesPage> {
     return null;
   }
 
+  VehicleModel? _otherVehicleAssignedTo(
+    String driverId,
+    String currentVehicleId,
+  ) {
+    for (final vehicle in _vehicles) {
+      if (vehicle.id != currentVehicleId &&
+          vehicle.assignedUserId == driverId &&
+          !vehicle.isDeleted) {
+        return vehicle;
+      }
+    }
+    return null;
+  }
+
   void _toggleEditMode() {
     setState(() {
       _isEditing = !_isEditing;
@@ -232,10 +246,17 @@ class _ManageVehiclesPageState extends State<ManageVehiclesPage> {
                           final name = driver.fullName.trim().isEmpty
                               ? driver.username
                               : driver.fullName;
+                          final otherVehicle = _otherVehicleAssignedTo(
+                            driver.id,
+                            vehicle.id,
+                          );
                           return DropdownMenuItem<String>(
                             value: driver.id,
+                            enabled: otherVehicle == null,
                             child: Text(
-                              '$name (${driver.email})',
+                              otherVehicle == null
+                                  ? '$name (${driver.email})'
+                                  : '$name - assigned to ${otherVehicle.plateNumber}',
                               overflow: TextOverflow.ellipsis,
                             ),
                           );
@@ -297,13 +318,15 @@ class _ManageVehiclesPageState extends State<ManageVehiclesPage> {
                                     assignedUserId: selectedDriverId,
                                     status: selectedStatus,
                                   );
-                                  if (!mounted) return;
+                                  if (!context.mounted || !mounted) return;
 
                                   Navigator.of(context).pop();
                                   await _loadData();
                                   if (!mounted) return;
 
-                                  ScaffoldMessenger.of(context).showSnackBar(
+                                  ScaffoldMessenger.of(
+                                    this.context,
+                                  ).showSnackBar(
                                     const SnackBar(
                                       content: Text(
                                         'Vehicle assignment updated.',
@@ -311,10 +334,13 @@ class _ManageVehiclesPageState extends State<ManageVehiclesPage> {
                                     ),
                                   );
                                 } catch (e) {
+                                  if (!context.mounted || !mounted) return;
                                   setSheetState(() {
                                     isSaving = false;
                                   });
-                                  ScaffoldMessenger.of(context).showSnackBar(
+                                  ScaffoldMessenger.of(
+                                    this.context,
+                                  ).showSnackBar(
                                     SnackBar(
                                       content: Text('Unable to update: $e'),
                                     ),

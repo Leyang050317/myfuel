@@ -83,10 +83,18 @@ class _RefuelRecordPageState extends State<RefuelRecordPage> {
         ),
       );
       if (mounted) {
+        _form.currentState?.reset();
+        _odometer.clear();
+        _liters.clear();
+        _station.clear();
+        _notes.clear();
+        setState(() {
+          _date = DateTime.now();
+          _fullTank = true;
+        });
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(const SnackBar(content: Text('Refuel record saved.')));
-        Navigator.pop(context);
       }
     } catch (e) {
       if (mounted) {

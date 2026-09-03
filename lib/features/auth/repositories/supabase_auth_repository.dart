@@ -4,6 +4,9 @@ import '../models/user_model.dart';
 import 'auth_repository.dart';
 
 class SupabaseAuthRepository implements AuthRepository {
+  static const emailConfirmationRedirect =
+      'com.example.myfuel://login-callback/';
+
   final SupabaseClient _supabase = Supabase.instance.client;
 
   @override
@@ -11,6 +14,7 @@ class SupabaseAuthRepository implements AuthRepository {
     final response = await _supabase.auth.signUp(
       email: user.email,
       password: user.password,
+      emailRedirectTo: emailConfirmationRedirect,
       data: {
         'full_name': user.fullName,
         'username': user.username,
