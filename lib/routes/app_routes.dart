@@ -8,7 +8,6 @@ import '../features/admin/screens/add_vehicle_page.dart';
 import '../features/admin/screens/manage_vehicles_page.dart';
 import '../features/home/screens/home_page.dart';
 import '../features/fuel_price/screens/fuel_trend_page.dart';
-import '../features/map/screens/osm_test_page.dart';
 import '../features/user/screens/fuel_calculator_page.dart';
 import '../features/fuel_tracking/screens/fuel_history_page.dart';
 import '../features/fuel_tracking/screens/refuel_record_page.dart';
@@ -29,7 +28,6 @@ class AppRoutes {
   static const String driverPetrolMap = '/home/petrol-map';
   static const String driverTripLog = '/home/trip-log';
   static const String fuelTrend = '/fuel-trend';
-  static const String osmTest = '/osm-test';
   static const String fuelCalculator = '/fuel-calculator';
   static const String fuelClaim = '/fuel-claim';
   static const String fuelHistory = '/fuel-history';
@@ -52,7 +50,6 @@ class AppRoutes {
     driverTripLog: (context) => const HomePage(initialIndex: 2),
     fuelTrend: (context) => const FuelTrendPage(),
 
-    osmTest: (context) => const OSMTestPage(),
     fuelCalculator: (context) => const FuelCalculatorPage(),
     fuelClaim: (context) => const FuelCalculatorPage(),
     fuelHistory: (context) => const FuelHistoryPage(),

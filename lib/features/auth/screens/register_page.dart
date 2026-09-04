@@ -213,6 +213,12 @@ class _RegisterPageState extends State<RegisterPage> {
                               controller: _nameController,
                               keyboardType: TextInputType.name,
                               textInputAction: TextInputAction.next,
+                              inputFormatters: [
+                                FilteringTextInputFormatter.allow(
+                                  RegExp(r"[A-Za-z .'/-]"),
+                                ),
+                                LengthLimitingTextInputFormatter(100),
+                              ],
                               decoration: const InputDecoration(
                                 labelText: 'Full Name',
                                 hintText: 'Enter your full name',
@@ -226,6 +232,9 @@ class _RegisterPageState extends State<RegisterPage> {
                               controller: _usernameController,
                               keyboardType: TextInputType.text,
                               textInputAction: TextInputAction.next,
+                              inputFormatters: [
+                                LengthLimitingTextInputFormatter(30),
+                              ],
                               decoration: const InputDecoration(
                                 labelText: 'Username',
                                 hintText: 'Choose a username',
@@ -239,6 +248,9 @@ class _RegisterPageState extends State<RegisterPage> {
                               controller: _emailController,
                               keyboardType: TextInputType.emailAddress,
                               textInputAction: TextInputAction.next,
+                              inputFormatters: [
+                                LengthLimitingTextInputFormatter(254),
+                              ],
                               decoration: const InputDecoration(
                                 labelText: 'Email Address',
                                 hintText: 'name@example.com',
@@ -271,10 +283,13 @@ class _RegisterPageState extends State<RegisterPage> {
                               controller: _passwordController,
                               obscureText: _obscurePassword,
                               textInputAction: TextInputAction.next,
+                              inputFormatters: [
+                                LengthLimitingTextInputFormatter(64),
+                              ],
                               decoration: InputDecoration(
                                 labelText: 'Password',
-                                hintText: '8+ chars: 4 letters, 4 numbers',
-                                errorMaxLines: 3,
+                                hintText: '8-64 chars: upper, lower, number, symbol',
+                                errorMaxLines: 4,
                                 prefixIcon: const Icon(
                                   Icons.lock_outline_rounded,
                                 ),

@@ -191,18 +191,6 @@ class _DriverSidebar extends StatelessWidget {
                     'Fuel Dashboard',
                     AppRoutes.fuelDashboard,
                   ),
-                  _DriverSidebarItem(
-                    icon: Icons.bug_report_outlined,
-                    label: 'Developer Test',
-                    compact: compact,
-                    onTap: () {
-                      final navigator = Navigator.of(context);
-                      if (Scaffold.maybeOf(context)?.isDrawerOpen == true) {
-                        navigator.pop();
-                      }
-                      navigator.pushNamed(AppRoutes.osmTest);
-                    },
-                  ),
                 ],
               ),
             ),

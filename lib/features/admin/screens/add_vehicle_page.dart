@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../routes/app_routes.dart';
@@ -16,6 +17,10 @@ class AddVehiclePage extends StatefulWidget {
 
 class _AddVehiclePageState extends State<AddVehiclePage> {
   static const String _otherOption = 'Others';
+  static final RegExp _malaysianPlatePattern = RegExp(
+    r'^[A-Z]{1,3}\s?[1-9][0-9]{0,3}$',
+  );
+  static final RegExp _decimalInputPattern = RegExp(r'^\d*(?:\.\d{0,2})?$');
 
   static const Map<String, List<String>> _modelsByBrand = {
     'Perodua': ['Axia', 'Bezza', 'Myvi', 'Ativa', 'Alza', 'Aruz'],
@@ -299,15 +304,115 @@ class _AddVehiclePageState extends State<AddVehiclePage> {
     return null;
   }
 
-  String? _positiveNumber(String? value, String label) {
-    final number = double.tryParse(value?.trim() ?? '');
-    if (number == null) {
-      return '$label must be a number';
+  String? _validatePlateNumber(String? value) {
+    final plateNumber = value?.trim().toUpperCase() ?? '';
+
+    if (plateNumber.isEmpty) {
+      return 'Plate number is required.';
     }
-    if (number <= 0) {
-      return '$label must be more than 0';
+
+    if (!RegExp(r'^[A-Z0-9 ]+$').hasMatch(plateNumber)) {
+      return 'Plate number can only use letters, numbers, and one optional space.';
     }
+
+    if (RegExp(r'^[A-Z]+$').hasMatch(plateNumber)) {
+      return 'Plate number must include a number after the letter prefix.';
+    }
+
+    if (RegExp(r'^[0-9]+$').hasMatch(plateNumber)) {
+      return 'Plate number must start with 1 to 3 letters.';
+    }
+
+    if (plateNumber.contains(RegExp(r'\s{2,}')) ||
+        plateNumber.indexOf(' ') != plateNumber.lastIndexOf(' ')) {
+      return 'Plate number can contain only one space between letters and numbers.';
+    }
+
+    if (RegExp(r'^[A-Z]{4,}').hasMatch(plateNumber)) {
+      return 'Plate number can have at most 3 letters.';
+    }
+
+    if (RegExp(r'^[A-Z]{1,3}\s?0').hasMatch(plateNumber)) {
+      return 'The numeric part of the plate number must not start with 0.';
+    }
+
+    if (RegExp(r'^[A-Z]{1,3}\s?[1-9][0-9]{4,}$').hasMatch(
+      plateNumber,
+    )) {
+      return 'Plate number can have at most 4 digits.';
+    }
+
+    if (RegExp(r'\d.*[A-Z]').hasMatch(plateNumber)) {
+      return 'Plate number cannot contain letters after the numeric part.';
+    }
+
+    if (!_malaysianPlatePattern.hasMatch(plateNumber)) {
+      return 'Use 1 to 3 letters followed by 1 to 4 digits, for example ABC1234.';
+    }
+
     return null;
+  }
+
+  String? _validateDecimalValue({
+    required String? value,
+    required String label,
+    required double maximum,
+    required String unit,
+  }) {
+    final input = value?.trim() ?? '';
+
+    if (input.isEmpty) {
+      return '$label is required.';
+    }
+
+    if (input.startsWith('-')) {
+      return '$label must not be negative.';
+    }
+
+    final decimalParts = input.split('.');
+    if (decimalParts.length > 2) {
+      return '$label can contain only one decimal point.';
+    }
+
+    if (decimalParts.length == 2 && decimalParts.last.length > 2) {
+      return '$label can have up to 2 decimal places.';
+    }
+
+    if (!RegExp(r'^\d+(\.\d{1,2})?$').hasMatch(input)) {
+      return '$label can only use numbers and an optional decimal point.';
+    }
+
+    final number = double.tryParse(input);
+    if (number == null) {
+      return '$label must be a valid number.';
+    }
+
+    if (number <= 0) {
+      return '$label must be greater than 0 $unit.';
+    }
+
+    if (number > maximum) {
+      return '$label must not exceed ${maximum.toStringAsFixed(0)} $unit.';
+    }
+
+    return null;
+  }
+
+  TextInputFormatter get _decimalInputFormatter {
+    return TextInputFormatter.withFunction((oldValue, newValue) {
+      return _decimalInputPattern.hasMatch(newValue.text) ? newValue : oldValue;
+    });
+  }
+
+  TextInputFormatter get _plateInputFormatter {
+    return TextInputFormatter.withFunction((oldValue, newValue) {
+      final plateNumber = newValue.text.toUpperCase();
+      if (!RegExp(r'^[A-Z0-9 ]*$').hasMatch(plateNumber)) {
+        return oldValue;
+      }
+
+      return newValue.copyWith(text: plateNumber);
+    });
   }
 
   String _formatNumber(double value) {
@@ -361,13 +466,13 @@ class _AddVehiclePageState extends State<AddVehiclePage> {
                     TextFormField(
                       controller: _plateController,
                       textCapitalization: TextCapitalization.characters,
+                      inputFormatters: [_plateInputFormatter],
                       decoration: const InputDecoration(
                         labelText: 'Plate Number',
                         hintText: 'Example: VAB1234',
                         prefixIcon: Icon(Icons.confirmation_number_outlined),
                       ),
-                      validator: (value) =>
-                          _requiredText(value, 'Plate number'),
+                      validator: _validatePlateNumber,
                     ),
                     const SizedBox(height: 16),
                     _DropdownField<String>(
@@ -456,15 +561,21 @@ class _AddVehiclePageState extends State<AddVehiclePage> {
                       keyboardType: const TextInputType.numberWithOptions(
                         decimal: true,
                       ),
+                      inputFormatters: [_decimalInputFormatter],
                       decoration: InputDecoration(
                         labelText: _isLoadingVehicleSpec
                             ? 'Loading Fuel Efficiency...'
                             : 'Fuel Efficiency (km/L)',
                         hintText: 'Example: 14.5',
                         prefixIcon: const Icon(Icons.speed_outlined),
+                        suffixText: 'km/L',
                       ),
-                      validator: (value) =>
-                          _positiveNumber(value, 'Fuel efficiency'),
+                      validator: (value) => _validateDecimalValue(
+                        value: value,
+                        label: 'Fuel efficiency',
+                        maximum: 100,
+                        unit: 'km/L',
+                      ),
                     ),
                     const SizedBox(height: 16),
                     TextFormField(
@@ -472,15 +583,21 @@ class _AddVehiclePageState extends State<AddVehiclePage> {
                       keyboardType: const TextInputType.numberWithOptions(
                         decimal: true,
                       ),
+                      inputFormatters: [_decimalInputFormatter],
                       decoration: InputDecoration(
                         labelText: _isLoadingVehicleSpec
                             ? 'Loading Tank Capacity...'
                             : 'Tank Capacity (L)',
                         hintText: 'Example: 45',
                         prefixIcon: const Icon(Icons.water_drop_outlined),
+                        suffixText: 'L',
                       ),
-                      validator: (value) =>
-                          _positiveNumber(value, 'Tank capacity'),
+                      validator: (value) => _validateDecimalValue(
+                        value: value,
+                        label: 'Tank capacity',
+                        maximum: 200,
+                        unit: 'L',
+                      ),
                     ),
                   ],
                 ),

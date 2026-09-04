@@ -54,13 +54,6 @@ class _HomePageState extends State<HomePage> {
     return DriverShell(
       title: _pageTitle,
       selectedRoute: selectedRoute,
-      actions: [
-        IconButton(
-          icon: const Icon(Icons.bug_report),
-          tooltip: 'Developer Test',
-          onPressed: () => Navigator.of(context).pushNamed(AppRoutes.osmTest),
-        ),
-      ],
       child: IndexedStack(
         index: _currentIndex,
         children: [
