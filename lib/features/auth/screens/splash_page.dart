@@ -82,7 +82,6 @@ class _SplashPageState extends State<SplashPage>
                   ),
                 ),
                 const SizedBox(height: 24),
-                // App Title
                 const Text(
                   'MyFuel',
                   style: TextStyle(
